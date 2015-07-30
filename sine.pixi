@@ -1,0 +1,116 @@
+fn _($el, $list) {
+    $l = new()
+    $l.Tail = $list
+    $l.Head = $el
+    ret ($l)
+}
+
+fn out($sig) {
+    fn audio_callback(
+        $stream, 
+        $out, 
+        $channels, 
+        $frames, 
+        $output_time_in_system_ticks, 
+        $in_channels, 
+        $latency_in_frames )
+    {
+        $out.gen($out, $channels, $frames)
+        ret( 1 )
+    }
+
+    set_audio_callback( audio_callback, $sig, 44100, INT16, 2 )
+}
+
+fn osc_saw($freq, $amp) {
+    $this = new()
+    
+    $this.phase = 0
+    $this.freq = $freq
+    $this.amp = 4096
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        clean($channels[0], 0)
+        clean($channels[1], 0)
+
+        $i = 0 while ($i < $frames) {
+            
+            $v = ((($i + $this.phase) * $this.freq / 44100) - floor(($i + $this.phase) * $this.freq / 44100) - 0.5)
+            $channels[0][$i] = $this.amp * $v 
+            $channels[1][$i] = $this.amp * $v
+            $i + 1
+        }
+     
+        $this.phase + $frames                
+    }
+            
+    ret ($this)
+}
+/* TODO: 
+    - Именовать узлы для доступа
+
+*/
+fn mix() {
+    $this = new()
+    $this.signals = 0
+    $this.counter = 0
+    
+    $this.join = { // $this, $sig
+        $this = $1
+        $sig = $2
+        $this.counter + 1        
+        $this.signals = _($sig, $this.signals)
+    }
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        clean($channels[0])
+        clean($channels[1])
+        
+        $ch = new(2)
+        $ch[0] = new($frames, 1, INT16)
+        $ch[1] = new($frames, 1, INT16)
+
+        $signals = $this.signals
+        $i = 0 while $i < $this.counter {
+            $i + 1
+            $sig = $signals.Head
+            $signals = $signals.Tail
+
+            $sig.gen($sig, $ch, $frames)
+
+            op_cc(OP_ADD, $channels[0], $ch[0], $frames)
+            op_cc(OP_ADD, $channels[1], $ch[1], $frames)
+        }
+    }
+
+    ret ($this)
+}
+
+fn join($proc, $sig) {
+    $proc.join($proc, $sig)
+}
+
+$osc1 = osc_saw(440, 1)
+$osc2 = osc_saw(441, 1)
+$mix = mix()
+join($mix, $osc1)
+join($mix, $osc2)
+
+out($mix)
+
+while( 1 )
+{
+    while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { halt } }
+}
+
+
+
+

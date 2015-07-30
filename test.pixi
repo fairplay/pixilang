@@ -1,0 +1,38 @@
+fn _($el, $list) {
+    
+    $l = new()
+    $l.Tail = $list
+    $l.Head = $el
+    ret ($l)
+}
+
+fn map($list, $op) {
+    $l = new()
+
+    if $list.Head == 0 {
+        ret (0)
+    }
+
+    $l = _($op($list.Head), map($list.Tail, $op))
+
+    ret ($l)
+}
+
+/*$x = _(1, _(2, _(3, _(4, 0))))
+$y = map ($x, {ret ($1 * $1)})
+
+printf("%d\n", $y.Head)
+printf("%d\n", $y.Tail.Head)
+printf("%d\n", $y.Tail.Tail.Head)
+
+printf("%d\n", $x.Head)
+printf("%d\n", $x.Tail.Head)
+printf("%d\n", $x.Tail.Tail.Head)*/
+
+
+$a = new(1,1,FLOAT32)
+
+$a[0,0] = 123/12345
+
+printf("%f\n", $a[0,0])
+

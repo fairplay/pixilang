@@ -1,0 +1,105 @@
+/*
+    QuickSort.pixi
+    Author: needhash@gmail.com
+    
+        English:
+    Basic quick sort algo for Pixilang v.3.
+    There are also several handy functions: swap(), rand_range() and compare_numbers().
+    See further description in code.
+    
+    How to use quick_sort(): pass to it your array, it's size and compare function.
+    This compare function needs to be created by user, it made this way because
+    algorithm is agnostic to type of data being sorted. But if you want to sort numbers,
+    just use included compare_numbers() func. See also QuickSortExample.pixi.
+    Sorry for my english :)
+    
+    
+        Русский:
+    Простой алгоритм быстрой сортировки. Также есть несколько полезных функций:
+        swap() меняет местами два элемента в контейнере;
+        rand_range() возвращает случайное число из заданного диапазона [$a, $b),
+    то есть включая $a и не включая $b, но $b < 32767;
+        и compare_numbers() - часто используемая функция сравнения (см. ниже) для целых
+    и действительных чисел.
+    
+    Как использовать quick_sort(): передаём массив, размер и функцию сравнения compare().
+    Функция compare задаётся пользователем. Благодаря этому алгоритм нейтрален к типу
+    сортируемых данных, будь то, например, картинки, строки, цвета и т.д.
+    Смотрите также пример QuickSortExample.pixi.
+    Для сортировки массива чисел используйте ф-ю compare_numbers().
+*/
+
+
+/*
+    returns random number in given range, excluding $b
+    (but not bigger than 32767 because of built-in rand() function)
+*/
+fn rand_range($a, $b)
+{
+    ret($a + rand() % ($b - $a))
+}
+
+/*
+    swaps 2 elements of container
+*/
+fn swap($arr, $a, $b)
+{
+    $t = $arr[$a]
+    $arr[$a] = $arr[$b]
+    $arr[$b] = $t
+}
+
+fn _qsort_rec($arr, $l, $r, $compare)
+{
+    if $l >= $r
+    {
+        ret
+    }
+    if $r - $l == 1
+    {
+        if $compare($arr[$l], $arr[$r]) == 1
+        {
+            swap($arr, $l, $r)
+        }
+        ret
+    }
+    
+    // partition
+    $givenPivot = rand_range($l + 1, $r)
+    $pivotValue = $arr[$givenPivot]
+    // move pivot to the end
+    swap($arr, $r, $givenPivot)
+    $i = $l
+    $newPivot = $l
+    while($i < $r)
+    {
+        if $compare($arr[$i], $pivotValue) == -1
+        {
+            swap($arr, $i, $newPivot)
+            $newPivot + 1
+        }
+        
+        $i + 1
+    }
+    swap($arr, $newPivot, $r)
+    
+    _qsort_rec($arr, $l, $newPivot - 1, $compare)
+    _qsort_rec($arr, $newPivot + 1, $r, $compare)
+}
+
+fn quick_sort($arr, $size, $compare)
+{
+    _qsort_rec($arr, 0, $size - 1, $compare)
+}
+
+// frequently used compare function for int and float numbers
+fn compare_numbers($a, $b)
+{
+    if $a < $b {
+        ret(-1)
+    }
+    if $a == $b {
+        ret(0)
+    }
+    ret(1)
+}
