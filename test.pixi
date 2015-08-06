@@ -30,9 +30,8 @@ printf("%d\n", $x.Tail.Head)
 printf("%d\n", $x.Tail.Tail.Head)*/
 
 
-$a = 12.3456
+$a = new()
+$a.test = 123
+$b = "test"
 
-
-$a & 0xFFFC
-
-printf("!!! %f\n", $a )
+printf("!!! %d\n", $a.$b )
