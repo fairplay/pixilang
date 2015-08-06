@@ -30,9 +30,9 @@ printf("%d\n", $x.Tail.Head)
 printf("%d\n", $x.Tail.Tail.Head)*/
 
 
-$a = new(1,1,FLOAT32)
+$a = 12.3456
 
-$a[0,0] = 123/12345
 
-printf("%f\n", $a[0,0])
+$a & 0xFFFC
 
+printf("!!! %f\n", $a )

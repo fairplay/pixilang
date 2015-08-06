@@ -27,32 +27,43 @@ fn osc_saw($freq, $amp) {
     
     $this.phase = 0
     $this.freq = $freq
-    $this.amp = 4096
+    $this.amp = 1
 
     $this.gen = { // $this, $channels, $frames
         $this = $1
         $channels = $2
         $frames = $3
 
-        clean($channels[0], 0)
-        clean($channels[1], 0)
+        $buf = new($frames, 1, FLOAT32)
+        $int = new($frames, 1, FLOAT32)
+        clean($buf, $this.freq / 44100)
 
-        $i = 0 while ($i < $frames) {
-            
-            $v = ((($i + $this.phase) * $this.freq / 44100) - floor(($i + $this.phase) * $this.freq / 44100) - 0.5)
-            $channels[0][$i] = $this.amp * $v 
-            $channels[1][$i] = $this.amp * $v
-            $i + 1
-        }
+        op_cn(OP_H_INTEGRAL, $buf)
+        op_cn(OP_ADD, $buf, $this.phase * $this.freq / 44100)
+        copy($int, $buf)
+
+        op_cn(OP_OR, $int, 0)
+        op_cc(OP_SUB, $buf, $int)
+        op_cn(OP_SUB, $buf, 0.5 + $this.freq / 44100)        
+
+        op_cn(OP_MUL, $buf, 32768)
+        convert_type($buf, INT16)
+
+        printf("!!! %f %f\n", $buf[0], $buf[$frames / 2])
+
+        $channels[0] = $buf
+        $channels[1] = $buf
      
-        $this.phase + $frames                
+        $this.phase + $frames
+
+        remove($int)         
     }
             
     ret ($this)
 }
+
 /* TODO: 
     - Именовать узлы для доступа
-
 */
 fn mix() {
     $this = new()
@@ -99,7 +110,7 @@ fn join($proc, $sig) {
 }
 
 $osc1 = osc_saw(440, 1)
-$osc2 = osc_saw(441, 1)
+$osc2 = osc_saw(444, 1)
 $mix = mix()
 join($mix, $osc1)
 join($mix, $osc2)
