@@ -30,8 +30,6 @@ printf("%d\n", $x.Tail.Head)
 printf("%d\n", $x.Tail.Tail.Head)*/
 
 
-$a = new()
-$a.test = 123
-$b = "test"
+printf("!!! %d\n", 2 > 2)
 
-printf("!!! %d\n", $a.$b )
+
