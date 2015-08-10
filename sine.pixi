@@ -49,7 +49,6 @@ fn osc_saw($freq, $amp) {
         op_cn(OP_SUB, $buf, 0.5 + $this._freq / SRATE)        
 
         copy($channels[0], $buf)
-        printf("!!! %f\n", $channels[0][10])
         $this._phase + $frames
 
         remove($int)         
@@ -58,12 +57,11 @@ fn osc_saw($freq, $amp) {
     ret ($this)
 }
 
-fn filter($freq, $q) {
+fn filter($freq, $q, $type) {
     $this = new()
 
     $this._freq = $freq
     $this._q = $q
-    $this._type = 0
     $this._filter = new_filter()
             
     $omega = 2 * M_PI * $this._freq / SRATE
@@ -71,7 +69,7 @@ fn filter($freq, $q) {
     $tcos = cos( $omega )
     $alpha = $tsin / ( 2 * $this._q )
 
-    if $this._type == 0 {
+    if $type == 0 {
         //Low-pass:
         $b0 = ( 1 - $tcos ) / 2
         $b1 = 1 - $tcos
@@ -81,7 +79,7 @@ fn filter($freq, $q) {
         $a2 = 1 - $alpha
     }
 
-    if $this._type == 1 {
+    if $type == 1 {
         //High-pass
         $b0 = ( 1 + $tcos ) / 2
         $b1 = -( 1 + $tcos )
@@ -91,7 +89,7 @@ fn filter($freq, $q) {
         $a2 = 1 - $alpha
     }
 
-    if $this._type == 2 {
+    if $type == 2 {
         //Band-pass:
         $b0 = $alpha
             $b1 = 0
@@ -101,7 +99,7 @@ fn filter($freq, $q) {
         $a2 = 1 - $alpha
     }
 
-    if $this._type == 3 {
+    if $type == 3 {
         //Notch:
         $b0 = 1
         $b1 = -2 * $tcos
@@ -111,7 +109,7 @@ fn filter($freq, $q) {
         $a2 = 1 - $alpha
     }
 
-    if $this._type == 4 {
+    if $type == 4 {
         //All-pass:
         $b0 = 1 - $alpha
         $b1 = -2 * $tcos
@@ -148,11 +146,10 @@ fn filter($freq, $q) {
            
         $this._signal.gen($this._signal, $ch, $frames)
 
-	    apply_filter($this._filter, $channels[0], $ch, 0, 0, $frames)
+	    apply_filter($this._filter, $channels[0], $ch[0], 0, 0, $frames)
     }
     
     ret ($this)
-
 }
 
 /* TODO: 
@@ -160,14 +157,14 @@ fn filter($freq, $q) {
 */
 fn mix() {
     $this = new()
-    $this.signals = 0
-    $this.counter = 0
+    $this._signals = 0
+    $this._counter = 0
     
     $this.join = { // $this, $sig
         $this = $1
         $sig = $2
-        $this.counter + 1        
-        $this.signals = _($sig, $this.signals)
+        $this._counter + 1        
+        $this._signals = _($sig, $this._signals)
     }
 
     $this.gen = { // $this, $channels, $frames
@@ -180,13 +177,16 @@ fn mix() {
         $ch = new(1,1, FLOAT32)
         $ch[0] = new($frames, 1, FLOAT32)
 
-        $signals = $this.signals
-        $i = 0 while $i < $this.counter {
+        $signals = $this._signals
+        $i = 0 while $i < $this._counter {
             $i + 1
             $sig = $signals.Head
             $signals = $signals.Tail
 
             $sig.gen($sig, $ch, $frames)
+            op_cn(OP_LIMIT_TOP, $ch[0], 1)
+            op_cn(OP_LIMIT_BOTTOM, $ch[0], -1)
+            
             op_cc(OP_ADD, $channels[0], $ch[0], $frames)
         }
     }
@@ -206,11 +206,11 @@ join($mix, $osc1)
 join($mix, $osc2)
 join($mix, $osc3)
 
-$flt = filter(440, 4)
+//$flt = filter(20000, 1)
+//join($flt, $mix)
+//out($flt)
 
-join($flt, $mix)
-
-out($flt)
+out($mix)
 
 while( 1 )
 {
