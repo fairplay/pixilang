@@ -26,7 +26,7 @@ fn out($sig) {
         ret( 1 )
     }
 
-    set_audio_callback( audio_callback, $sig, SRATE, INT8, 1)
+    set_audio_callback( audio_callback, $sig, SRATE, INT8, 1, AUDIO_FLAG_INTERP2)
 }
 
 fn shut() {
@@ -273,9 +273,9 @@ fn j($proc, $sig) {
     $proc.join($proc, $sig)
 }
 
-$o1 = osc_saw(220, 0.3)
-$o2 = osc_saw(330, 0.3)
-$o3 = osc_noise(293, 0.3)
+$o1 = osc_sqr(220, 0.1)
+$o2 = osc_sqr(330, 0.1)
+$o3 = osc_sqr(293, 0.1)
 $mix = mix()
 
 j($mix, $o1)
@@ -284,7 +284,7 @@ j($mix, $o3)
 
 $hz = 110
 
-$f = filter($hz, 101, 0)
+$f = filter($hz, 100, 0)
 j($f, $mix)
 
 out($f)
@@ -295,9 +295,9 @@ clean(buf)
 $d = 1
 while (1)
 {    
-    if TICK > SRATE / 32 {
-        TICK - SRATE / 32
-        $hz * pow(8, $d / 12)
+    if TICK > SRATE / 4 {
+        TICK - SRATE / 4
+        $hz * pow(2, $d / 12)
 
         if $hz > 880 * 4 {
             $d = -1
