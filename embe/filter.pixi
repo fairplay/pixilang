@@ -16,7 +16,7 @@ fn flt_hp($freq, $q) {
     ret (filter($freq, $q, 1))
 }
 
-fn flt_band($freq, $q) {
+fn flt_bp($freq, $q) {
     ret (filter($freq, $q, 2))
 }
 
@@ -64,15 +64,15 @@ fn filter($freq, $q, $type) {
 
         $lo = new($frames, 1, INT8)
         $hi = new($frames, 1, INT8)
-        $band = new($frames, 1, INT8)
+        $bp = new($frames, 1, INT8)
         $notch = new($frames, 1, INT8)
 
         $i = 0 while $i < $frames {
             $in0 = $ch[0][$i] / MAXINT
             $j = 0 while $j < 2 {
-                $lo0 = $lo0 + $f * $band0
-                $hi0 = ($scale * $in0 - $lo0 - $q * $band0)
-                $band0 = ($f * $hi0 + $band0)
+                $lo0 = $lo0 + $f * $bp0
+                $hi0 = ($scale * $in0 - $lo0 - $q * $bp0)
+                $bp0 = ($f * $hi0 + $bp0)
                 $notch0 = $hi0 + $lo0
 
                 $j + 1
@@ -80,7 +80,7 @@ fn filter($freq, $q, $type) {
 
             $lo[$i] = floor($lo0 * MAXINT)
             $hi[$i] = floor($hi0 * MAXINT)
-            $band[$i] = floor($band0 * MAXINT)
+            $bp[$i] = floor($bp0 * MAXINT)
             $notch[$i] = floor($notch0 * MAXINT)
 
             $i + 1
@@ -93,7 +93,7 @@ fn filter($freq, $q, $type) {
             copy($channels[0], $hi)
         }
         if $this.Type == 2 {
-            copy($channels[0], $band)
+            copy($channels[0], $bp)
         }
         if $this.Type == 3 {
             copy($channels[0], $notch)
@@ -101,7 +101,7 @@ fn filter($freq, $q, $type) {
 
         remove($lo)
         remove($hi)
-        remove($band)
+        remove($bp)
         remove($notch)
 
         remove($ch)
