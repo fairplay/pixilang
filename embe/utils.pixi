@@ -1,0 +1,80 @@
+fn _($el, $list) {
+    $l = new()
+    $l.Tail = $list
+    $l.Head = $el
+    ret ($l)
+}
+
+/* TODO:
+    - Именовать узлы для доступа
+*/
+fn mix() {
+    $this = new()
+    $this.signals = -1
+    $this.counter = 0
+
+    $this.join = { // $this, $sig
+        $this = $1
+        $sig = $2
+        $this.counter + 1
+        $this.signals = _($sig, $this.signals)
+    }
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        clean($channels[0], 0)
+
+        $ch = new(1, 1)
+        $ch[0] = new($frames, 1, INT8)
+
+        $signals = $this.signals
+        $i = 0 while $i < $this.counter {
+            $i + 1
+            $sig = $signals.Head
+            $signals = $signals.Tail
+
+            $sig.gen($sig, $ch, $frames)
+            
+            op_cc(OP_SADD, $channels[0], $ch[0], $frames)
+        }
+
+        remove($ch)
+    }
+
+    ret ($this)
+}
+
+fn vis() {
+    $this = new()
+
+    $this.join = { // $this, $sig
+        $this = $1
+        $sig = $2
+        $this.signal = $sig
+    }
+
+    $this.render = { // $this
+        $this = $1
+
+        clear()
+        $frames = get_xsize($this.signal.Buf)
+        $x = 0 while ($x < $frames) {
+
+            $r = (MAXINT + $this.signal.Buf[$x] * (1 - abs($frames / 2 - $x) / $frames * 2))
+            $fi = M_PI * 2 * $x / $frames
+            
+            dot($r * sin($fi), $r * cos($fi), 0xFFE0E0)
+            $x + 1
+        }
+        frame()
+    }
+
+    ret ($this)
+}
+
+fn j($proc, $sig) {
+    $proc.join($proc, $sig)
+}

@@ -1,0 +1,110 @@
+fn osc_sin($freq, $amp) {
+
+    $this = new()
+
+    $this.Phase = 0
+    $this.Freq = $freq
+    $this.Amp = $amp
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        $p = 2 * M_PI * $this.Phase / SRATE
+        $d = 2 * M_PI * $this.Freq / SRATE
+
+        generator(OP_SIN8, $channels[0], $p, $this.Amp * MAXINT, $d, 0)
+
+        $this.Phase + $this.Freq * $frames
+
+        if $this.Phase > SRATE {
+            $this.Phase % SRATE
+        } 
+    }
+
+    ret ($this)
+}
+
+fn osc_sqr($freq, $amp) {
+
+    $this = new()
+
+    $this.Phase = 0
+    $this.Freq = $freq
+    $this.Amp = $amp
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        $p = 2 * M_PI * $this.Phase / SRATE
+        $d = 2 * M_PI * $this.Freq / SRATE
+
+        generator(OP_SIN8, $channels[0], $p, MAXINT, $d, 0)
+        op_cn(OP_GREATER, $channels[0], 0)
+        op_cn(OP_MUL, $channels[0], 2 * MAXINT * $this.Amp)
+        op_cn(OP_ADD, $channels[0], -MAXINT * $this.Amp)
+
+        $this.Phase + $this.Freq * $frames
+
+        if $this.Phase > SRATE {
+            $this.Phase % SRATE
+        } 
+    }
+
+    ret ($this)
+}
+
+fn osc_saw($freq, $amp) {
+
+    $this = new()
+
+    $this.Phase = 0
+    $this.Freq = $freq
+    $this.Amp = $amp
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        $p = 2 * M_PI * $this.Phase / SRATE
+        $d = 2 * M_PI * $this.Freq / SRATE
+
+        generator(OP_SIN8, $channels[0], $p, MAXINT, $d, 0)
+
+        op_cn(OP_EQUAL, $channels[0], 0)
+        op_cn(OP_SUB, $channels[0], 1)
+        op_cn(OP_H_INTEGRAL, $channels[0])
+
+        op_cn(OP_MUL, $channels[0], 2 * MAXINT * $this.Amp)
+        op_cn(OP_ADD, $channels[0], MAXINT * $this.Amp)
+
+        $this.Phase + $this.Freq * $frames
+
+        if $this.Phase > SRATE {
+            $this.Phase % SRATE
+        } 
+    }
+
+    ret ($this)
+}
+
+fn osc_noise($amp) {
+    
+    $this = new()
+    $this.Amp = $amp
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        generator(OP_RAND, $channels[0], 0, $this.Amp * MAXINT)
+    }
+
+    ret ($this)
+
+}

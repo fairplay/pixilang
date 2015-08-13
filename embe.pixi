@@ -1,0 +1,31 @@
+SRATE = 44100
+MAXINT = 127
+MININT = -128
+TICK = 0
+
+include "embe/utils.pixi"
+include "embe/osc.pixi"
+include "embe/filter.pixi"
+
+fn out($sig) {
+    fn audio_callback(
+        $stream,
+        $sig,
+        $channels,
+        $frames,
+        $output_time_in_system_ticks,
+        $in_channels,
+        $latency_in_frames )
+    {
+        $sig.gen($sig, $channels, $frames)
+        TICK + $frames
+        ret( 1 )
+    }
+
+    set_audio_callback( audio_callback, $sig, SRATE, INT8, 1, AUDIO_FLAG_INTERP2)
+}
+
+fn shut() {
+    set_audio_callback( -1 )
+}
+

@@ -1,0 +1,112 @@
+/*
+Type : 12db resonant low, high or bandpass
+References : Effect Deisgn Part 1, Jon Dattorro, J. Audio Eng. Soc., Vol 45, No. 9, 1997 September
+
+Notes : 
+Digital approximation of Chamberlin two-pole low pass. Easy to calculate coefficients, easy to process algorithm.
+
+http://musicdsp.org/showArchiveComment.php?ArchiveID=23
+*/
+
+fn flt_lp($freq, $q) {
+    ret (filter($freq, $q, 0))
+}
+
+fn flt_hp($freq, $q) {
+    ret (filter($freq, $q, 1))
+}
+
+fn flt_band($freq, $q) {
+    ret (filter($freq, $q, 2))
+}
+
+fn flt_notch($freq, $q) {
+    ret (filter($freq, $q, 3))
+}
+
+fn filter($freq, $q, $type) {
+    $this = new()
+
+    $this.Type = $type
+    $this.Freq = $freq
+    $this.Q = $q
+
+    if ($q > 100) {
+        $this.selfosc = 1
+    } else {
+        $this.selfosc = 0
+    }
+
+    $this.join = { // $this, $sig
+        $this = $1
+        $sig = $2
+
+        $this.signal = $sig
+    }
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+
+        if ($this.selfosc) {
+            $q = 0.001
+        } else {
+            $q = sqrt(1 - atan(sqrt($this.Q)) * 2 / M_PI)
+        }
+        $scale = sqrt($q)
+
+        $f = $this.Freq / SRATE * 2
+
+        $ch = new(1, 1)
+        $ch[0] = new($frames, 1, INT8)
+        $this.signal.gen($this.signal, $ch, $frames)
+
+        $lo = new($frames, 1, INT8)
+        $hi = new($frames, 1, INT8)
+        $band = new($frames, 1, INT8)
+        $notch = new($frames, 1, INT8)
+
+        $i = 0 while $i < $frames {
+            $in0 = $ch[0][$i] / MAXINT
+            $j = 0 while $j < 2 {
+                $lo0 = $lo0 + $f * $band0
+                $hi0 = ($scale * $in0 - $lo0 - $q * $band0)
+                $band0 = ($f * $hi0 + $band0)
+                $notch0 = $hi0 + $lo0
+
+                $j + 1
+            }
+
+            $lo[$i] = floor($lo0 * MAXINT)
+            $hi[$i] = floor($hi0 * MAXINT)
+            $band[$i] = floor($band0 * MAXINT)
+            $notch[$i] = floor($notch0 * MAXINT)
+
+            $i + 1
+        }
+
+        if $this.Type == 0 {
+            copy($channels[0], $lo)
+        }
+        if $this.Type == 1 {
+            copy($channels[0], $hi)
+        }
+        if $this.Type == 2 {
+            copy($channels[0], $band)
+        }
+        if $this.Type == 3 {
+            copy($channels[0], $notch)
+        }
+
+        remove($lo)
+        remove($hi)
+        remove($band)
+        remove($notch)
+
+        remove($ch)
+        $this.Buf = clone($channels[0])
+    }
+
+    ret ($this)
+}

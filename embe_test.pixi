@@ -1,0 +1,42 @@
+include "embe.pixi"
+
+$o1 = osc_sqr(220, 0.1)
+$o2 = osc_sqr(330, 0.1)
+$o3 = osc_noise(0.5)
+$mix = mix()
+
+j($mix, $o1)
+j($mix, $o2)
+j($mix, $o3)
+
+$hz = 110
+
+$f = filter($hz, 100, 2)
+j($f, $mix)
+
+$v = vis()
+j($v, $f)
+
+out($f)
+
+$d = 1
+while (1) {    
+    if TICK > SRATE / 4 {
+        TICK - SRATE / 4
+        $hz * pow(2, $d / 12)
+
+        if $hz > 880 * 4 {
+            $d = -1
+        } 
+
+        if ($hz < 110) {
+            $d = 1
+        }
+
+        $f.Freq = $hz
+    }
+
+    $v.render($v)
+    
+    while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { halt } }
+}
