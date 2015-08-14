@@ -57,8 +57,8 @@ $f = flt_lp($hz, 100)
 j($f, $m)
 
 $ws = waveshaper({
-    //$v = $1 ^ 0xFF << 2
-    ret($1)
+    $v = $1 / sin($1) / sin($1)
+    ret($v)
 })
 
 j($ws, $f)
