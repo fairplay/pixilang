@@ -37,7 +37,7 @@ $o1 = osc_sqr(220, 0.2)
 $o2 = osc_sqr(293, 0.2)
 
 // Create noise oscillator 
-$o3 = osc_sqr(330, 0.2) 
+$o3 = osc_sqr(224, 0.2) 
 
 // Create mixer
 $m = mix()
@@ -53,29 +53,32 @@ j($m, $o3)
 $hz0 = 110
 $hz = $hz0
 
-$f = flt_lp($hz, 100)
+$f = flt_bp($hz, 59)
+
 j($f, $m)
 
-$ws = waveshaper({
-    $v = $1 / sin($1) / sin($1)
+/*$ws = waveshaper({
+    $v = $1
+    
     ret($v)
 })
 
-j($ws, $f)
+j($ws, $f)*/
+
 // Create visualizer
 $v = vis_tartan()
 
 // Join our filter to visualizer
-j($v, $ws)
+j($v, $f)
 
 // Send our filter to the output
-out($ws)
+out($f)
 
 $d = 1
 while (1) {    
     // Some cutoff modulation
-    if TICK > SRATE / 16 {
-        TICK - SRATE / 16
+    if TICK > SRATE / 4 {
+        TICK - SRATE / 4
         $hz * pow(2, $d / 12)
 
         if $hz > SRATE / 2 {
