@@ -6,7 +6,7 @@ fn _($el, $list) {
 }
 
 /* TODO:
-    - Именовать узлы для доступа
+    - name nodes for access
 */
 fn mix() {
     $this = new()
@@ -28,7 +28,7 @@ fn mix() {
         clean($channels[0], 0)
 
         $ch = new()
-        $ch[0] = new($frames, 1, INT8)
+        $ch[0] = new($frames, 1, FLOAT32)
 
         $signals = $this.signals
         $i = 0 while $i < $this.counter {

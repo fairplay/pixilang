@@ -59,16 +59,16 @@ fn filter($freq, $q, $type) {
         $f = $this.Freq / SRATE * 2
 
         $ch = new()
-        $ch[0] = new($frames, 1, INT8)
+        $ch[0] = new($frames, 1, FLOAT32)
         $this.signal.gen($this.signal, $ch, $frames)
 
-        $lo = new($frames, 1, INT8)
-        $hi = new($frames, 1, INT8)
-        $bp = new($frames, 1, INT8)
-        $notch = new($frames, 1, INT8)
+        $lo = new($frames, 1, FLOAT32)
+        $hi = new($frames, 1, FLOAT32)
+        $bp = new($frames, 1, FLOAT32)
+        $notch = new($frames, 1, FLOAT32)
 
         $i = 0 while $i < $frames {
-            $in0 = $ch[0][$i] / MAXINT
+            $in0 = $ch[0][$i]
             $j = 0 while $j < 2 {
                 $lo0 = $lo0 + $f * $bp0
                 $hi0 = ($scale * $in0 - $lo0 - $q * $bp0)
@@ -78,10 +78,10 @@ fn filter($freq, $q, $type) {
                 $j + 1
             }
 
-            $lo[$i] = floor($lo0 * MAXINT)
-            $hi[$i] = floor($hi0 * MAXINT)
-            $bp[$i] = floor($bp0 * MAXINT)
-            $notch[$i] = floor($notch0 * MAXINT)
+            $lo[$i] = $lo0
+            $hi[$i] = $hi0
+            $bp[$i] = $bp0
+            $notch[$i] = $notch0
 
             $i + 1
         }

@@ -22,7 +22,7 @@ fn out($sig) {
         ret( 1 )
     }
 
-    set_audio_callback( audio_callback, $sig, SRATE, INT8, 1, AUDIO_FLAG_INTERP2)
+    set_audio_callback( audio_callback, $sig, SRATE, FLOAT32, 1, AUDIO_FLAG_INTERP2)
 }
 
 fn shut() {
