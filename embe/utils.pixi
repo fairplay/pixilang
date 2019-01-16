@@ -47,6 +47,8 @@ fn mix() {
     ret ($this)
 }
 
+
+
 fn vis_waveform() {
     $this = new()
 
@@ -63,6 +65,36 @@ fn vis_waveform() {
         $frames = get_xsize($this.signal.Buf)
         $x = 0 while ($x < $frames) {
             dot($x - $frames / 2, $this.signal.Buf[$x], 0xFFE0E0)
+            $x + 1
+        }
+        frame()
+    }
+
+    ret ($this)
+}
+
+fn vis_fft() {
+    $this = new()
+
+    $this.join = { // $this, $sig
+        $this = $1
+        $sig = $2
+        $this.signal = $sig
+    }
+
+    $this.render = { // $this
+        $this = $1
+
+        $re = clone($this.signal.Buf)
+        $im = clone(re)
+        clean($im)
+        fft(0, $im, $re)
+
+        clear()
+        $frames = get_xsize($im)
+        $x = 0 while ($x < $frames) {
+            $amp = 32 * sqrt($re[$x] * $re[$x] + $im[$x] * $im[$x])
+            dot($x - $frames / 2, -$amp, 0xFFE0E0)
             $x + 1
         }
         frame()
@@ -98,7 +130,7 @@ fn vis_tartan() {
 
                 $clr = get_color($c, $c, $c)
 
-                if $s >= 16 {
+                if $s >= 0.25 {
                     box(8 * $x + 0, 1 * $y, 2, 0, RED)
                 } else {
                     box(8 * $x + 2, 1 * $y, 2, 0, BLUE)

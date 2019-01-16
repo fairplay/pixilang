@@ -1,7 +1,7 @@
 include "embe.pixi"
 
-$o1 = osc_sin(220, 0.8)
-$o2 = osc_sin(293, 0.2)
+$o1 = osc_sin(220, 0.5)
+$o2 = osc_sin(330, 0.5)
 $o3 = osc_noise(0.5)
 
 // Create mixer
@@ -10,7 +10,7 @@ $m = mix()
 // Join ("j") our oscillators to the mixer
 j($m, $o1)
 j($m, $o2)
-j($m, $o3)
+//j($m, $o3)
 
 // Create band-pass filter with cutoff frequency == 110Hz
 // and resonance value = 100% (if we will use value > 100)
@@ -29,7 +29,7 @@ $f = flt_bp($hz, 80)
 j($f, $ws)
 
 // Create visualizer
-$v = vis_tartan()
+$v = vis_fft()
 
 // Join our filter to visualizer
 j($v, $f)
