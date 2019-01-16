@@ -2,7 +2,7 @@
 Type : 12db resonant low, high or bandpass
 References : Effect Deisgn Part 1, Jon Dattorro, J. Audio Eng. Soc., Vol 45, No. 9, 1997 September
 
-Notes : 
+Notes :
 Digital approximation of Chamberlin two-pole low pass. Easy to calculate coefficients, easy to process algorithm.
 
 http://musicdsp.org/showArchiveComment.php?ArchiveID=23

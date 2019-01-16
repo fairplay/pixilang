@@ -37,8 +37,8 @@ fn mix() {
             $signals = $signals.Tail
 
             $sig.gen($sig, $ch, $frames)
-            
-            op_cc(OP_SADD, $channels[0], $ch[0], $frames)
+
+            op_cc(OP_ADD, $channels[0], $ch[0], $frames)
         }
 
         remove($ch)
@@ -61,7 +61,7 @@ fn vis_waveform() {
 
         clear()
         $frames = get_xsize($this.signal.Buf)
-        $x = 0 while ($x < $frames) { 
+        $x = 0 while ($x < $frames) {
             dot($x - $frames / 2, $this.signal.Buf[$x], 0xFFE0E0)
             $x + 1
         }
@@ -93,17 +93,17 @@ fn vis_tartan() {
             $x = -$sx while $x < $sx {
 
                 $s = $this.signal.Buf[($y + $sy + ($x + $sx) * $sy) % $frames]
-                
+
                 $c = 255
 
                 $clr = get_color($c, $c, $c)
 
-                if $s >= 64 {
+                if $s >= 16 {
                     box(8 * $x + 0, 1 * $y, 2, 0, RED)
                 } else {
                     box(8 * $x + 2, 1 * $y, 2, 0, BLUE)
                 }
-                
+
                 $x + 1
             }
 

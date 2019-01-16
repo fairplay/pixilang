@@ -20,7 +20,7 @@ fn osc_sin($freq, $amp) {
 
         if $this.Phase > SRATE {
             $this.Phase % SRATE
-        } 
+        }
     }
 
     ret ($this)
@@ -51,9 +51,8 @@ fn osc_sqr($freq, $amp) {
 
         if $this.Phase > SRATE {
             $this.Phase % SRATE
-        } 
+        }
     }
-
     ret ($this)
 }
 
@@ -86,14 +85,14 @@ fn osc_saw($freq, $amp) {
 
         if $this.Phase > SRATE {
             $this.Phase % SRATE
-        } 
+        }
     }
 
     ret ($this)
 }
 
 fn osc_noise($amp) {
-    
+
     $this = new()
     $this.Amp = $amp
 

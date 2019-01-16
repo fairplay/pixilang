@@ -1,43 +1,8 @@
 include "embe.pixi"
 
-fn waveshaper($f) {
-    $this = new()
-
-    $this.join = { // $this, $sig
-        $this = $1
-        $sig = $2
-
-        $this.signal = $sig
-    }
-
-    $this.f = $f
-
-    $this.gen = { // $this, $channels, $frames
-        $this = $1
-        $channels = $2
-        $frames = $3
-
-        $this.signal.gen($this.signal, $channels, $frames)
-
-        $i = 0 while $i < $frames {
-            $channels[0][$i] = $this.f($channels[0][$i])
-
-            $i + 1            
-        }
-
-        $this.Buf = clone($channels[0])
-
-    }
-    ret ($this)
-}
-
-// Create 2 square waveform oscillators, 220Hz (A3) and 330Hz (E4), 
-// amplitude 0.1 (amplitude value from 0 to 1)
-$o1 = osc_sqr(220, 0.8) 
-$o2 = osc_sqr(293, 0.2)
-
-// Create noise oscillator 
-$o3 = osc_sqr(224, 0.2) 
+$o1 = osc_sin(220, 0.8)
+$o2 = osc_sin(293, 0.2)
+$o3 = osc_noise(0.5)
 
 // Create mixer
 $m = mix()
@@ -47,23 +12,21 @@ j($m, $o1)
 j($m, $o2)
 j($m, $o3)
 
-// Create band-pass filter with cutoff frequency == 110Hz 
+// Create band-pass filter with cutoff frequency == 110Hz
 // and resonance value = 100% (if we will use value > 100)
 // filter will start to self-oscillate
 $hz0 = 110
 $hz = $hz0
 
-$f = flt_bp($hz, 59)
-
-j($f, $m)
-
-/*$ws = waveshaper({
-    $v = $1
-    
+$ws = waveshaper({
+    $v = atan($1)
     ret($v)
 })
 
-j($ws, $f)*/
+j($ws, $m)
+
+$f = flt_bp($hz, 80)
+j($f, $ws)
 
 // Create visualizer
 $v = vis_tartan()
@@ -75,7 +38,7 @@ j($v, $f)
 out($f)
 
 $d = 1
-while (1) {    
+while (1) {
     // Some cutoff modulation
     if TICK > SRATE / 4 {
         TICK - SRATE / 4
@@ -83,13 +46,13 @@ while (1) {
 
         if $hz > SRATE / 2 {
             $hz = $hz0
-        } 
+        }
 
         $f.Freq = $hz
     }
 
     // Some visualization
     $v.render($v)
-    
+
     while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { halt } }
 }
