@@ -1,6 +1,4 @@
 SRATE = 44100
-MAXINT = 127
-MININT = -128
 TICK = 0
 
 include "embe/utils.pixi"
@@ -15,17 +13,17 @@ fn out($sig) {
         $frames,
         $output_time_in_system_ticks,
         $in_channels,
-        $latency_in_frames )
-    {
+        $latency_in_frames
+    ) {
         $sig.gen($sig, $channels, $frames)
         TICK + $frames
-        ret( 1 )
+        ret (1)
     }
 
-    set_audio_callback( audio_callback, $sig, SRATE, FLOAT32, 1, AUDIO_FLAG_INTERP2)
+    set_audio_callback(audio_callback, $sig, SRATE, FLOAT32, 1, AUDIO_FLAG_INTERP2)
 }
 
 fn shut() {
-    set_audio_callback( -1 )
+    set_audio_callback(-1)
 }
 

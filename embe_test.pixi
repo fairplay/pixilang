@@ -33,7 +33,7 @@ fn waveshaper($f) {
 
 // Create 2 square waveform oscillators, 220Hz (A3) and 330Hz (E4), 
 // amplitude 0.1 (amplitude value from 0 to 1)
-$o1 = osc_sqr(220, 0.2) 
+$o1 = osc_sqr(220, 0.8) 
 $o2 = osc_sqr(293, 0.2)
 
 // Create noise oscillator 
