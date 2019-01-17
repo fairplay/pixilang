@@ -16,15 +16,17 @@ fn out($sig) {
         $in_channels,
         $latency_in_frames
     ) {
-        $sig.gen($sig, $channels, $frames)
+        $sig.gen($sig, $channels, $frames, $in_channels)
         TICK + $frames
         ret (1)
     }
 
     set_audio_callback(audio_callback, $sig, SRATE, FLOAT32, 1, AUDIO_FLAG_INTERP2)
+    enable_audio_input(1)
 }
 
 fn shut() {
+    enable_audio_input(0)
     set_audio_callback(-1)
 }
 

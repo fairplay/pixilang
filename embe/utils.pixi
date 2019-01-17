@@ -8,6 +8,22 @@ fn _($el, $list) {
 /* TODO:
     - name nodes for access
 */
+
+fn in() {
+    $this = new()
+
+    $this.gen = { // $this, $channels, $frames, $in_channels
+        $this = $1
+        $channels = $2
+        $frames = $3
+        $in_channels = $4
+        logf("%f\n", $in_channels[0][10])
+        copy($channels[0], $in_channels[0])
+    }
+
+    ret ($this)
+}
+
 fn mix() {
     $this = new()
     $this.signals = -1
@@ -47,8 +63,6 @@ fn mix() {
     ret ($this)
 }
 
-
-
 fn vis_waveform() {
     $this = new()
 
@@ -76,6 +90,9 @@ fn vis_waveform() {
 fn vis_fft() {
     $this = new()
 
+    fft_size = 1024
+    fft_size2 = fft_size div 2
+
     $this.join = { // $this, $sig
         $this = $1
         $sig = $2
@@ -85,18 +102,35 @@ fn vis_fft() {
     $this.render = { // $this
         $this = $1
 
-        $re = clone($this.signal.Buf)
-        $im = clone(re)
+        $im = new(fft_size, 1, FLOAT)
+        $re = new(fft_size, 1, FLOAT)
         clean($im)
+        copy($re, $this.signal.Buf)
         fft(0, $im, $re)
 
+        scr = get_screen()
+        xsize = get_xsize(scr)
+        ysize = get_ysize(scr)
+        hxsize = xsize div 2
+        hysize = ysize div 2
+        $x0 = 0 $y0 = 0
+
         clear()
-        $frames = get_xsize($im)
-        $x = 0 while ($x < $frames) {
-            $amp = 32 * sqrt($re[$x] * $re[$x] + $im[$x] * $im[$x])
-            dot($x - $frames / 2, -$amp, 0xFFE0E0)
-            $x + 1
+        $max_amp = 0
+        $max_amp_i = 0
+        $i = 0 while ($i < fft_size2) {
+            $x = ($i / fft_size2) * xsize - hxsize
+            $amp = sqrt($re[$i] * $re[$i] + $im[$i] * $im[$i]) / fft_size2
+            if ($amp > $max_amp) {
+                $max_amp = $amp
+                $max_amp_i = $i
+            }
+            $y = -$amp * hysize
+            line($x0, $y0, $x, $y, 0xFFE0E0)
+            $x0 = $x $y0 = $y;
+            $i + 1
         }
+        //logf("%f %d\n", $max_amp, $max_amp_i * SRATE / fft_size)
         frame()
     }
 
