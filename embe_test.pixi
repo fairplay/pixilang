@@ -3,7 +3,7 @@ include "embe.pixi"
 $o1 = osc_sin(440, 0.2)
 $o2 = osc_sin(660, 0.7)
 $o3 = osc_noise(0.1)
-$in = in()
+$in0 = in(0)
 
 // Create mixer
 $m = mix()
@@ -12,12 +12,12 @@ $m = mix()
 //j($m, $o1)
 //j($m, $o2)
 //j($m, $o3)
-j($m, $in)
+j($m, $in0)
 
 // Create band-pass filter with cutoff frequency == 110Hz
 // and resonance value = 100% (if we will use value > 100)
 // filter will start to self-oscillate
-$hz0 = 110
+$hz0 = 220
 $hz = $hz0
 
 $ws = waveshaper({

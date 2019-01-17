@@ -48,6 +48,7 @@ fn filter($freq, $q, $type) {
         $this = $1
         $channels = $2
         $frames = $3
+        $in_channels = $4
 
         if ($this.selfosc) {
             $q = 0.001
@@ -60,7 +61,7 @@ fn filter($freq, $q, $type) {
 
         $ch = new()
         $ch[0] = new($frames, 1, FLOAT32)
-        $this.signal.gen($this.signal, $ch, $frames)
+        $this.signal.gen($this.signal, $ch, $frames, $in_channels)
 
         $lo = new($frames, 1, FLOAT32)
         $hi = new($frames, 1, FLOAT32)

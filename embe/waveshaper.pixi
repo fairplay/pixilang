@@ -14,8 +14,9 @@ fn waveshaper($f) {
         $this = $1
         $channels = $2
         $frames = $3
+        $in_channels = $4
 
-        $this.signal.gen($this.signal, $channels, $frames)
+        $this.signal.gen($this.signal, $channels, $frames, $in_channels)
 
         $i = 0 while $i < $frames {
             $channels[0][$i] = $this.f($channels[0][$i])
