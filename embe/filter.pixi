@@ -58,7 +58,7 @@ fn filter($freq, $q, $type) {
         }
         $scale = sqrt($q)
 
-        $f = $this.Freq / SRATE * 2
+        $f = 2 * $this.Freq / get_audio_sample_rate(0)
 
         $ch = new()
         $ch[0] = new($frames, 1, FLOAT32)

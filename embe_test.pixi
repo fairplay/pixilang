@@ -44,7 +44,7 @@ out($f)
 $d = 1
 while (1) {
     // Some cutoff modulation
-    if TICK > SRATE / 4 {
+    /*if TICK > SRATE / 4 {
         TICK - SRATE / 4
         $hz * pow(2, $d / 12)
 
@@ -53,7 +53,7 @@ while (1) {
         }
 
         $f.Freq = $hz
-    }
+    }*/
 
     // Some visualization
     $v.render($v)

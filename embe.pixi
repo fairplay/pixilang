@@ -1,4 +1,3 @@
-SRATE = 44100
 TICK = 0
 
 include "embe/utils.pixi"
@@ -21,7 +20,7 @@ fn out($sig) {
         ret (1)
     }
 
-    set_audio_callback(audio_callback, $sig, SRATE, FLOAT32, 1, AUDIO_FLAG_INTERP2)
+    set_audio_callback(audio_callback, $sig, 0, FLOAT32, 1, AUDIO_FLAG_INTERP2)
     enable_audio_input(1)
 }
 
