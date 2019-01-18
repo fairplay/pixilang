@@ -65,6 +65,7 @@ fn mix() {
             op_cc(OP_ADD, $channels[0], $ch[0], $frames)
         }
 
+        remove($ch[0])
         remove($ch)
     }
 
@@ -100,6 +101,8 @@ fn vis_fft() {
 
     fft_size = 1024
     fft_size2 = fft_size div 2
+    im = new(fft_size, 1, FLOAT32)
+    re = new(fft_size, 1, FLOAT32)
 
     $this.join = { // $this, $sig
         $this = $1
@@ -110,11 +113,9 @@ fn vis_fft() {
     $this.render = { // $this
         $this = $1
 
-        $im = new(fft_size, 1, FLOAT)
-        $re = new(fft_size, 1, FLOAT)
-        clean($im)
-        copy($re, $this.signal.Buf)
-        fft(0, $im, $re)
+        clean(im)
+        copy(re, $this.signal.Buf)
+        fft(0, im, re)
 
         scr = get_screen()
         xsize = get_xsize(scr)
@@ -128,7 +129,7 @@ fn vis_fft() {
         $max_amp_i = 0
         $i = 0 while ($i < fft_size2) {
             $x = ($i / fft_size2) * xsize - hxsize
-            $amp = sqrt($re[$i] * $re[$i] + $im[$i] * $im[$i]) / fft_size2
+            $amp = sqrt(re[$i] * re[$i] + im[$i] * im[$i]) / fft_size2
             if ($amp > $max_amp) {
                 $max_amp = $amp
                 $max_amp_i = $i
@@ -138,7 +139,6 @@ fn vis_fft() {
             $x0 = $x $y0 = $y;
             $i + 1
         }
-        //logf("%f %d\n", $max_amp, $max_amp_i * SRATE / fft_size)
         frame()
     }
 
@@ -192,4 +192,8 @@ fn vis_tartan() {
 
 fn j($proc, $sig) {
     $proc.join($proc, $sig)
+}
+
+fn a($sig, $param, $mod) {
+    
 }

@@ -1,18 +1,20 @@
 include "embe.pixi"
 
+show_memory_debug_messages(0)
+
 $o1 = osc_sin(440, 0.2)
 $o2 = osc_sin(660, 0.7)
-$o3 = osc_noise(0.1)
-$in0 = in(0)
+$o3 = osc_noise(0.5)
+$in = in(0)
 
 // Create mixer
 $m = mix()
 
 // Join ("j") our oscillators to the mixer
-//j($m, $o1)
-//j($m, $o2)
-//j($m, $o3)
-j($m, $in0)
+j($m, $o1)
+j($m, $o2)
+j($m, $o3)
+j($m, $in)
 
 // Create band-pass filter with cutoff frequency == 110Hz
 // and resonance value = 100% (if we will use value > 100)
@@ -20,15 +22,18 @@ j($m, $in0)
 $hz0 = 220
 $hz = $hz0
 
-$ws = waveshaper({
+/*$ws = waveshaper({
     $v = atan($1)
     ret($v)
 })
 
-j($ws, $m)
+j($ws, $m)*/
 
 $f = flt_bp($hz, 80)
-j($f, $ws)
+j($f, $m)
+
+$lfo = lfo()
+a($f, 'Freq', $lfo)
 
 // Create visualizer
 $v = vis_fft()
@@ -42,7 +47,7 @@ out($f)
 $d = 1
 while (1) {
     // Some cutoff modulation
-    if TICK > SRATE / 4 {
+    /*if TICK > SRATE / 4 {
         TICK - SRATE / 4
         $hz * pow(2, $d / 12)
 
@@ -51,7 +56,7 @@ while (1) {
         }
 
         $f.Freq = $hz
-    }
+    }*/
 
     // Some visualization
     $v.render($v)

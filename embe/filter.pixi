@@ -27,9 +27,11 @@ fn flt_notch($freq, $q) {
 fn filter($freq, $q, $type) {
     $this = new()
 
-    $this.type = $type
-    $this.freq = $freq
-    $this.q = $q
+    $this.Type = $type
+    $this.Freq = $freq
+    $this.Q = $q
+    $this.Buf = new(1, 1, FLOAT32)
+    $this._resized = 0
 
     if ($q > 100) {
         $this.selfosc = 1
@@ -57,7 +59,7 @@ fn filter($freq, $q, $type) {
         }
         $scale = sqrt($q)
 
-        $f = $this.Freq / SRATE * 2
+        $f = 2 * $this.Freq / get_audio_sample_rate(0)
 
         $ch = new()
         $ch[0] = new($frames, 1, FLOAT32)
@@ -105,8 +107,14 @@ fn filter($freq, $q, $type) {
         remove($bp)
         remove($notch)
 
+        remove($ch[0])
         remove($ch)
-        $this.Buf = clone($channels[0])
+
+        if ($this._resized == 0) {
+            resize($this.Buf, $frames)
+        }
+        $this._resized = 1
+        copy($this.Buf, $channels[0])
     }
 
     ret ($this)
