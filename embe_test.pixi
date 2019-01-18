@@ -32,6 +32,9 @@ j($ws, $m)*/
 $f = flt_bp($hz, 80)
 j($f, $m)
 
+$lfo = lfo()
+a($f, 'Freq', $lfo)
+
 // Create visualizer
 $v = vis_fft()
 

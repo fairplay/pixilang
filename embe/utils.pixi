@@ -185,3 +185,7 @@ fn vis_tartan() {
 fn j($proc, $sig) {
     $proc.join($proc, $sig)
 }
+
+fn a($sig, $param, $mod) {
+    
+}
