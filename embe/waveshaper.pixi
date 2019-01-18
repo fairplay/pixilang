@@ -24,7 +24,6 @@ fn waveshaper($f) {
         }
 
         $this.Buf = clone($channels[0])
-
     }
     ret ($this)
 }
