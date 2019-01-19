@@ -1,0 +1,56 @@
+fn comb($freq, $fb) {
+    $this = new()
+
+    $this.Freq = $freq
+    $this.Fb = $fb
+
+    $srate = get_audio_sample_rate(1)
+    $this._dly_line = new($srate / 2, 1, FLOAT32)
+
+    $this.join = { // $this, $sig
+        $this = $1
+        $sig = $2
+
+        $this.signal = $sig
+    }
+
+    $this.gen = { // $this, $channels, $frames, $in_channels
+        $this = $1
+        $channels = $2
+        $frames = $3
+        $in_channels = $4
+
+        $ch = new()
+        $ch[0] = new($frames, 1, FLOAT32)
+        $this.signal.gen($this.signal, $ch, $frames, $in_channels)
+
+        $srate = get_audio_sample_rate(1)
+
+        $dly = $srate / $this.Freq
+        if $dly > $frames {
+            $dly = $frames
+        }
+        $dly0 = floor($dly)
+
+        $i = 0 while ($i < $frames) {
+            $dly_line = $this._dly_line[$i + $frames - $dly]
+            $dly_line1 = $this._dly_line[$i + 1 + $frames - $dly]
+            $ch[0][$i] + ($dly_line + ($dly_line1 - $dly_line) * ($dly - $dly0)) * $this.Fb
+            $this._dly_line[$i + $frames] = $ch[0][$i]
+            $i + 1
+        }
+        copy($this._dly_line, $this._dly_line, 0, $frames)
+
+        copy($channels[0], $ch[0])
+
+        if $this.Buf == 0 {
+            $this.Buf = new($frames, 1, FLOAT32)
+        }
+        copy($this.Buf, $channels[0])
+
+        remove($ch[0])
+        remove($ch)
+    }
+
+    ret ($this)
+}

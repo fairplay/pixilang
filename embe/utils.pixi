@@ -60,8 +60,6 @@ fn mix() {
             $signals = $signals.Tail
 
             $sig.gen($sig, $ch, $frames, $in_channels)
-            logf("%f %d\n", $ch[0][10], $i)
-
             op_cc(OP_ADD, $channels[0], $ch[0], $frames)
         }
 
@@ -135,8 +133,7 @@ fn vis_fft() {
                 $max_amp_i = $i
             }
             $y = -$amp * hysize
-            line($x0, $y0, $x, $y, 0xFFE0E0)
-            $x0 = $x $y0 = $y;
+            line($x, 0, $x, $y, #FFFFFF)
             $i + 1
         }
         frame()
