@@ -1,5 +1,3 @@
-TICK = 0
-
 include "embe/utils.pixi"
 include "embe/osc.pixi"
 include "embe/filter.pixi"
@@ -16,12 +14,12 @@ fn out($sig) {
         $latency_in_frames
     ) {
         $sig.gen($sig, $channels, $frames, $in_channels)
-        TICK + $frames
         ret (1)
     }
 
-    set_audio_callback(audio_callback, $sig, 0, FLOAT32, 1, AUDIO_FLAG_INTERP2)
     enable_audio_input(1)
+    set_audio_callback(audio_callback, $sig, 0, FLOAT32, 1, AUDIO_FLAG_INTERP2)
+    start_timer(0)
 }
 
 fn shut() {

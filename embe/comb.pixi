@@ -1,9 +1,10 @@
-fn comb($freq, $fb) {
+fn comb($freq, $fbk) {
     $this = new()
 
     $this.Freq = $freq
-    $this.Fb = $fb
-
+    $this.Fbk = $fbk
+    $this.Mutex = mutex_create()
+    
     $srate = get_audio_sample_rate(1)
     $this._dly_line = new($srate / 2, 1, FLOAT32)
 
@@ -20,6 +21,8 @@ fn comb($freq, $fb) {
         $frames = $3
         $in_channels = $4
 
+        mutex_lock($this.Mutex)        
+
         $ch = new()
         $ch[0] = new($frames, 1, FLOAT32)
         $this.signal.gen($this.signal, $ch, $frames, $in_channels)
@@ -33,9 +36,9 @@ fn comb($freq, $fb) {
         $dly0 = floor($dly)
 
         $i = 0 while ($i < $frames) {
-            $dly_line = $this._dly_line[$i + $frames - $dly]
-            $dly_line1 = $this._dly_line[$i + 1 + $frames - $dly]
-            $ch[0][$i] + ($dly_line + ($dly_line1 - $dly_line) * ($dly - $dly0)) * $this.Fb
+            $dly_val = $this._dly_line[$i + $frames - $dly0]
+            $dly_val1 = $this._dly_line[$i + 1 + $frames - $dly0]
+            $ch[0][$i] + ($dly_val + ($dly_val1 - $dly_val) * ($dly - $dly0)) * $this.Fbk
             $this._dly_line[$i + $frames] = $ch[0][$i]
             $i + 1
         }
@@ -50,6 +53,7 @@ fn comb($freq, $fb) {
 
         remove($ch[0])
         remove($ch)
+        mutex_unlock($this.Mutex)        
     }
 
     ret ($this)

@@ -15,7 +15,7 @@ fn osc_sin($freq, $amp) {
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
-        generator(OP_SIN8, $channels[0], $p, $this.Amp, $d, 0)
+        generator(OP_SIN, $channels[0], $p, $this.Amp, $d, 0)
 
         $this.Phase + $this.Freq * $frames
 
@@ -44,7 +44,7 @@ fn osc_sqr($freq, $amp) {
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
-        generator(OP_SIN8, $channels[0], $p, 1, $d, 0)
+        generator(OP_SIN, $channels[0], $p, 1, $d, 0)
         op_cn(OP_GREATER, $channels[0], 0)
         op_cn(OP_MUL, $channels[0], 2 * $this.Amp)
         op_cn(OP_ADD, $channels[0], -$this.Amp)
@@ -75,7 +75,7 @@ fn osc_saw($freq, $amp) {
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
-        generator(OP_SIN8, $channels[0], $p, 1, $d, 0)
+        generator(OP_SIN, $channels[0], $p, 1, $d, 0)
 
         op_cn(OP_EQUAL, $channels[0], 0)
         op_cn(OP_SUB, $channels[0], 1)
@@ -108,5 +108,4 @@ fn osc_noise($amp) {
     }
 
     ret ($this)
-
 }

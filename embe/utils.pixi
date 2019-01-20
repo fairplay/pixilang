@@ -85,7 +85,7 @@ fn vis_waveform() {
         clear()
         $frames = get_xsize($this.signal.Buf)
         $x = 0 while ($x < $frames) {
-            dot($x - $frames / 2, $this.signal.Buf[$x], 0xFFE0E0)
+            dot($x - $frames / 2, 400 * $this.signal.Buf[$x], 0xFFE0E0)
             $x + 1
         }
         frame()
@@ -120,14 +120,13 @@ fn vis_fft() {
         ysize = get_ysize(scr)
         hxsize = xsize div 2
         hysize = ysize div 2
-        $x0 = 0 $y0 = 0
 
         clear()
         $max_amp = 0
         $max_amp_i = 0
         $i = 0 while ($i < fft_size2) {
             $x = ($i / fft_size2) * xsize - hxsize
-            $amp = sqrt(re[$i] * re[$i] + im[$i] * im[$i]) / fft_size2
+            $amp = 16 * sqrt(re[$i] * re[$i] + im[$i] * im[$i]) / fft_size2
             if ($amp > $max_amp) {
                 $max_amp = $amp
                 $max_amp_i = $i
@@ -191,6 +190,12 @@ fn j($proc, $sig) {
     $proc.join($proc, $sig)
 }
 
-fn a($sig, $param, $mod) {
-    
+fn lfo1($obj, $prop) {
+    $ms = get_timer(0) / 1000
+
+    $val = abs(-1 + ($ms % 60) / 30) * 4000 + 4000
+
+    mutex_lock($obj.Mutex)        
+    set_prop($obj, $prop, $val)
+    mutex_unlock($obj.Mutex)        
 }

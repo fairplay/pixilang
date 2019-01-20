@@ -30,8 +30,7 @@ fn filter($freq, $q, $type) {
     $this.Type = $type
     $this.Freq = $freq
     $this.Q = $q
-    $this.Buf = new(1, 1, FLOAT32)
-    $this._resized = 0
+    $this.Mutex = mutex_create()
 
     if ($q > 100) {
         $this.selfosc = 1
@@ -52,6 +51,8 @@ fn filter($freq, $q, $type) {
         $frames = $3
         $in_channels = $4
 
+        mutex_lock($this.Mutex)        
+
         if ($this.selfosc) {
             $q = 0.001
         } else {
@@ -59,7 +60,7 @@ fn filter($freq, $q, $type) {
         }
         $scale = sqrt($q)
 
-        $f = 2 * $this.Freq / get_audio_sample_rate(0)
+        $f = 2 * $this.Freq / get_audio_sample_rate(1)
 
         $ch = new()
         $ch[0] = new($frames, 1, FLOAT32)
@@ -109,12 +110,13 @@ fn filter($freq, $q, $type) {
 
         remove($ch[0])
         remove($ch)
+        mutex_unlock($this.Mutex)        
 
-        if ($this._resized == 0) {
-            resize($this.Buf, $frames)
+        if $this.Buf == 0 {
+            $this.Buf = new($frames, 1, FLOAT32)
         }
-        $this._resized = 1
         copy($this.Buf, $channels[0])
+
     }
 
     ret ($this)
