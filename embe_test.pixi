@@ -1,22 +1,23 @@
 include "embe.pixi"
 include "embe/comb.pixi"
+include "embe/biquad.pixi"
 
 // Create mixer
 $m = mix()
-//$noise = osc_noise(0.01)
-$noise = osc_sqr(80, 0.005)
+$noise = osc_noise(0.0001)
+//$noise = osc_sqr(80, 0.001)
 //$noise = in(0)
 
-$i = 1 while ($i <= 8) {
-    $f = comb($i * 40, 0.9999)
-    $bp = flt_lp($i * 80, 199)
+$i = 1 while ($i <= 16) {
+    $f = comb($i * 60, 0.99)
+    $bp = bq_bp($i * 60, 99)
     j($bp, $noise)
     j($f, $bp)
     j($m, $f)
     $i + 1
 }
 
-$bp = flt_lp(600, 90)
+$bp = bq_lp(1600, 1)
 
 
 //$o1 = osc_sqr(110, 0.1)

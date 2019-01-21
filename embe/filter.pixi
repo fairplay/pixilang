@@ -116,7 +116,6 @@ fn filter($freq, $q, $type) {
             $this.Buf = new($frames, 1, FLOAT32)
         }
         copy($this.Buf, $channels[0])
-
     }
 
     ret ($this)

@@ -1,0 +1,140 @@
+fn bq_lp($freq, $q){
+    $bq = biquad($freq, $q, 0)
+    ret ($bq.init($bq))
+}
+
+fn bq_hp($freq, $q){
+    $bq = biquad($freq, $q, 1)
+    ret ($bq.init($bq))
+}
+
+fn bq_bp($freq, $q){
+    $bq = biquad($freq, $q, 2)
+    ret ($bq.init($bq))
+}
+
+fn bq_notch($freq, $q){
+    $bq = biquad($freq, $q, 3)
+    ret ($bq.init($bq))
+}
+
+fn biquad($freq, $q, $type) {
+    $this = new()
+
+    $this.Type = $type
+    $this.Freq = $freq
+    $this.Q = $q
+    $this.Mutex = mutex_create()
+
+    $this._a = new(3, 1, FLOAT32) //feedforward filter coefficients
+    $this._b = new(2, 1, FLOAT32) //feedback filter coefficients
+    $this._f = new_filter() 
+
+    $this.join = { // $this, $sig
+        $this = $1
+        $sig = $2
+
+        $this.signal = $sig
+    }
+
+    $this.init = {
+        $this = $1
+
+        $omega = 2 * M_PI * $this.Freq / get_audio_sample_rate(1)
+        $tsin = sin($omega)
+        $tcos = cos($omega)
+        $alpha = $tsin / 2 / $this.Q
+    
+        if filter_type == 0
+        {
+            // lp
+            $b0 = (1 - $tcos)/ 2
+            $b1 = 1 - $tcos
+            $b2 = (1 - $tcos)/ 2
+            $a0 = 1 + $alpha
+            $a1 = -2 * $tcos
+            $a2 = 1 - $alpha
+        }
+
+        if filter_type == 1
+        {
+            // hp
+            $b0 = (1 + $tcos)/ 2
+            $b1 = -(1 + $tcos)
+            $b2 = (1 + $tcos)/ 2
+            $a0 = 1 + $alpha
+            $a1 = -2 * $tcos
+            $a2 = 1 - $alpha
+        }
+
+        if filter_type == 2
+        {
+            // bp
+            $b0 = $alpha
+            $b1 = 0
+            $b2 = -$alpha
+            $a0 = 1 + $alpha
+            $a1 = -2 * $tcos
+            $a2 = 1 - $alpha
+        }
+
+        if filter_type == 3
+        {
+            // notch
+            $b0 = 1
+            $b1 = -2 * $tcos
+            $b2 = 1
+            $a0 = 1 + $alpha
+            $a1 = -2 * $tcos
+            $a2 = 1 - $alpha
+        }
+
+        if filter_type == 4
+        {
+            // ap
+            $b0 = 1 - $alpha
+            $b1 = -2 * $tcos
+            $b2 = 1 + $alpha
+            $a0 = 1 + $alpha
+            $a1 = -2 * $tcos
+            $a2 = 1 - $alpha
+        }
+
+        $this._a[0] = $b0 / $a0
+        $this._a[1] = $b1 / $a0
+        $this._a[2] = $b2 / $a0
+        $this._b[0] = -$a1 / $a0
+        $this._b[1] = -$a2 / $a0
+
+        init_filter($this._f, $this._a, $this._b)
+
+        ret ($this)
+    }
+
+    $this.gen = { // $this, $channels, $frames
+        $this = $1
+        $channels = $2
+        $frames = $3
+        $in_channels = $4
+
+        mutex_lock($this.Mutex)
+
+        $ch = new()
+        $ch[0] = new($frames, 1, FLOAT32)
+        $this.signal.gen($this.signal, $ch, $frames, $in_channels)
+
+        apply_filter($this._f, $ch[0], $ch[0], 0, 0, $frames)
+        copy($channels[0], $ch[0])
+
+        remove($ch[0])
+        remove($ch)
+        mutex_unlock($this.Mutex)        
+
+        if $this.Buf == 0 {
+            $this.Buf = new($frames, 1, FLOAT32)
+        }
+        copy($this.Buf, $channels[0])
+    }
+
+    ret ($this)
+}
