@@ -1,29 +1,31 @@
-fn bq_lp($freq, $q){
-    $bq = biquad($freq, $q, 0)
+fn bq_lp($freq, $r) {
+    $bq = biquad($freq, $r, 0)
     ret ($bq.init($bq))
 }
 
-fn bq_hp($freq, $q){
-    $bq = biquad($freq, $q, 1)
+fn bq_hp($freq, $r) {
+    $bq = biquad($freq, $r, 1)
     ret ($bq.init($bq))
 }
 
-fn bq_bp($freq, $q){
-    $bq = biquad($freq, $q, 2)
+fn bq_bp($freq, $r) {
+    $bq = biquad($freq, $r, 2)
     ret ($bq.init($bq))
 }
 
-fn bq_notch($freq, $q){
-    $bq = biquad($freq, $q, 3)
+fn bq_notch($freq, $r) {
+    $bq = biquad($freq, $r, 3)
     ret ($bq.init($bq))
 }
 
-fn biquad($freq, $q, $type) {
+fn biquad($freq, $r, $type) {
     $this = new()
 
     $this.Type = $type
     $this.Freq = $freq
-    $this.Q = $q
+
+    $this._alpha = (1 - $r * $r) / 2
+
     $this.Mutex = mutex_create()
 
     $this._a = new(3, 1, FLOAT32) //feedforward filter coefficients
@@ -43,10 +45,9 @@ fn biquad($freq, $q, $type) {
         $omega = 2 * M_PI * $this.Freq / get_audio_sample_rate(1)
         $tsin = sin($omega)
         $tcos = cos($omega)
-        $alpha = $tsin / 2 / $this.Q
-    
-        if filter_type == 0
-        {
+        $alpha = $this._alpha
+
+        if filter_type == 0 {
             // lp
             $b0 = (1 - $tcos)/ 2
             $b1 = 1 - $tcos
@@ -56,8 +57,7 @@ fn biquad($freq, $q, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 1
-        {
+        if filter_type == 1 {
             // hp
             $b0 = (1 + $tcos)/ 2
             $b1 = -(1 + $tcos)
@@ -67,8 +67,7 @@ fn biquad($freq, $q, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 2
-        {
+        if filter_type == 2 {
             // bp
             $b0 = $alpha
             $b1 = 0
@@ -78,8 +77,7 @@ fn biquad($freq, $q, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 3
-        {
+        if filter_type == 3 {
             // notch
             $b0 = 1
             $b1 = -2 * $tcos
@@ -89,8 +87,7 @@ fn biquad($freq, $q, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 4
-        {
+        if filter_type == 4 {
             // ap
             $b0 = 1 - $alpha
             $b1 = -2 * $tcos

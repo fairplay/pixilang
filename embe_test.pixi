@@ -4,20 +4,20 @@ include "embe/biquad.pixi"
 
 // Create mixer
 $m = mix()
-$noise = osc_noise(0.0001)
+$noise = osc_noise(0.01)
 //$noise = osc_sqr(80, 0.001)
 //$noise = in(0)
 
 $i = 1 while ($i <= 16) {
-    $f = comb($i * 60, 0.99)
-    $bp = bq_bp($i * 60, 99)
-    j($bp, $noise)
-    j($f, $bp)
-    j($m, $f)
+    $comb = comb($i * 120, 0.99)
+    $bp = bq_bp($i * 240, 0.96)
+    j($comb, $noise)
+    j($bp, $comb)
+    j($m, $bp)
     $i + 1
 }
 
-$bp = bq_lp(1600, 1)
+$bp = bq_lp(1600, 0.95)
 
 
 //$o1 = osc_sqr(110, 0.1)
@@ -61,7 +61,8 @@ out($ws)
 
 while (1) {
 
-    lfo1($bp, "Freq")
+    lfo($bp, "Freq")
+    ar($noise, "Amp")
     // Some visualization
     $v1.render($v1)
 

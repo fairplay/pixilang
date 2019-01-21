@@ -190,10 +190,20 @@ fn j($proc, $sig) {
     $proc.join($proc, $sig)
 }
 
-fn lfo1($obj, $prop) {
-    $ms = get_timer(0) / 1000
+fn lfo($obj, $prop) {
+    $t = get_timer(0) / 1000
 
-    $val = abs(-1 + ($ms % 60) / 30) * 4000 + 4000
+    $val = abs(-1 + ($t % 60) / 30) * 4000 + 4000
+
+    mutex_lock($obj.Mutex)        
+    set_prop($obj, $prop, $val)
+    mutex_unlock($obj.Mutex)        
+}
+
+fn ar($obj, $prop) {
+    $t = (get_timer(0) % 1600) / 100
+
+    $val = 0.01 / (pow(2, $t))
 
     mutex_lock($obj.Mutex)        
     set_prop($obj, $prop, $val)

@@ -1,6 +1,5 @@
 include "embe/utils.pixi"
 include "embe/osc.pixi"
-include "embe/filter.pixi"
 include "embe/waveshaper.pixi"
 
 fn out($sig) {
