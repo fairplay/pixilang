@@ -26,8 +26,6 @@ fn biquad($freq, $r, $type) {
 
     $this._alpha = (1 - $r * $r) / 2
 
-    $this.Mutex = mutex_create()
-
     $this._a = new(3, 1, FLOAT32) //feedforward filter coefficients
     $this._b = new(2, 1, FLOAT32) //feedback filter coefficients
     $this._f = new_filter() 
@@ -114,8 +112,6 @@ fn biquad($freq, $r, $type) {
         $frames = $3
         $in_channels = $4
 
-        mutex_lock($this.Mutex)
-
         $ch = new()
         $ch[0] = new($frames, 1, FLOAT32)
         $this.signal.gen($this.signal, $ch, $frames, $in_channels)
@@ -125,7 +121,6 @@ fn biquad($freq, $r, $type) {
 
         remove($ch[0])
         remove($ch)
-        mutex_unlock($this.Mutex)        
 
         if $this.Buf == 0 {
             $this.Buf = new($frames, 1, FLOAT32)

@@ -1,6 +1,11 @@
 include "embe.pixi"
+include "embe/utils.pixi"
 include "embe/comb.pixi"
 include "embe/biquad.pixi"
+include "embe/osc.pixi"
+include "embe/mod.pixi"
+include "embe/vis.pixi"
+include "embe/waveshaper.pixi"
 
 // Create mixer
 $m = mix()
@@ -9,16 +14,15 @@ $noise = osc_noise(0.01)
 //$noise = in(0)
 
 $i = 1 while ($i <= 16) {
-    $comb = comb($i * 120, 0.99)
-    $bp = bq_bp($i * 240, 0.96)
-    j($comb, $noise)
-    j($bp, $comb)
-    j($m, $bp)
+    $comb = comb($i * 80, 0.999)
+    $bp = bq_bp($i * 40, 0.999)
+    j($bp, $noise)
+    j($comb, $bp)
+    j($m, $comb)
     $i + 1
 }
 
-$bp = bq_lp(1600, 0.95)
-
+$bp = bq_lp(1600, 0.5)
 
 //$o1 = osc_sqr(110, 0.1)
 //$o2 = osc_sin(660, 0.1)

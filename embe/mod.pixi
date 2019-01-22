@@ -1,0 +1,18 @@
+fn lfo($obj, $prop) {
+    $t = get_timer(0) / 100
+
+    $val = abs(-1 + ($t % 60) / 30) * 4000 + 4000
+
+    set_prop($obj, $prop, $val)
+    if $obj.init {
+        $obj.init($obj)
+    }
+}
+
+fn ar($obj, $prop) {
+    $t = (get_timer(0) % 400) / 100
+
+    $val = 0.01 / (pow(2, $t))
+
+    set_prop($obj, $prop, $val)
+}

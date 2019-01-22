@@ -11,7 +11,7 @@ fn osc_sin($freq, $amp) {
         $channels = $2
         $frames = $3
 
-        $srate = get_audio_sample_rate(0)
+        $srate = get_audio_sample_rate(1)
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
@@ -40,7 +40,7 @@ fn osc_sqr($freq, $amp) {
         $channels = $2
         $frames = $3
 
-        $srate = get_audio_sample_rate(0)
+        $srate = get_audio_sample_rate(1)
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
@@ -71,7 +71,7 @@ fn osc_saw($freq, $amp) {
         $channels = $2
         $frames = $3
 
-        $srate = get_audio_sample_rate(0)
+        $srate = get_audio_sample_rate(1)
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
@@ -98,16 +98,13 @@ fn osc_noise($amp) {
 
     $this = new()
     $this.Amp = $amp
-    $this.Mutex = mutex_create()
 
     $this.gen = { // $this, $channels, $frames
         $this = $1
         $channels = $2
         $frames = $3
         
-        mutex_lock($this.Mutex)
         generator(OP_RAND, $channels[0], 0, $this.Amp)
-        mutex_unlock($this.Mutex)
     }
 
     ret ($this)

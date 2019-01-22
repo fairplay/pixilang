@@ -1,0 +1,6 @@
+fn _($el, $list) {
+    $l = new()
+    $l.Tail = $list
+    $l.Head = $el
+    ret ($l)
+}

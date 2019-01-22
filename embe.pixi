@@ -1,7 +1,3 @@
-include "embe/utils.pixi"
-include "embe/osc.pixi"
-include "embe/waveshaper.pixi"
-
 fn out($sig) {
     fn audio_callback(
         $stream,
