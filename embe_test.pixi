@@ -7,10 +7,13 @@ include "embe/mod.pixi"
 include "embe/vis.pixi"
 include "embe/waveshaper.pixi"
 
+//set_pixel_size(WINDOW_XSIZE / 240)
+resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
+
 // Create mixer
 $m = mix()
-$noise = osc_noise(0.01)
-//$noise = osc_sqr(80, 0.001)
+//$noise = osc_noise(0.01)
+$noise = osc_sqr(120, 0.001)
 //$noise = in(0)
 
 $i = 1 while ($i <= 16) {

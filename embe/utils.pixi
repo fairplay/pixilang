@@ -10,7 +10,7 @@ fn in($channel_id) {
         $frames = $3
         $in_channels = $4
 
-        if ($in_channels >= 0) {
+        if $in_channels >= 0 {
             copy($channels[0], $in_channels[$this.channel_id])
             ret (1)
         } else {
@@ -39,7 +39,7 @@ fn mix() {
         $frames = $3
         $in_channels = $4
 
-        clean($channels[0], 0)
+        clean($channels[0])
 
         $ch = new()
         $ch[0] = new($frames, 1, FLOAT32)
