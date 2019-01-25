@@ -6,16 +6,19 @@ fn osc_sin($freq, $amp) {
     $this.Freq = $freq
     $this.Amp = $amp
 
-    $this.gen = { // $this, $channels, $frames
+    $this.gen = { // $this, $frames
         $this = $1
-        $channels = $2
-        $frames = $3
+        $frames = $2
+
+        if $this.Buf == 0 {
+            $this.Buf = new($frames, 1, FLOAT32)
+        }
 
         $srate = get_audio_sample_rate(1)
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
-        generator(OP_SIN, $channels[0], $p, $this.Amp, $d, 0)
+        generator(OP_SIN, $this.Buf, $p, $this.Amp, $d, 0)
 
         $this.Phase + $this.Freq * $frames
 
@@ -35,19 +38,22 @@ fn osc_sqr($freq, $amp) {
     $this.Freq = $freq
     $this.Amp = $amp
 
-    $this.gen = { // $this, $channels, $frames
+    $this.gen = { // $this, $frames
         $this = $1
-        $channels = $2
-        $frames = $3
+        $frames = $2
+
+        if $this.Buf == 0 {
+            $this.Buf = new($frames, 1, FLOAT32)
+        }
 
         $srate = get_audio_sample_rate(1)
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
-        generator(OP_SIN, $channels[0], $p, 1, $d, 0)
-        op_cn(OP_GREATER, $channels[0], 0)
-        op_cn(OP_MUL, $channels[0], 2 * $this.Amp)
-        op_cn(OP_ADD, $channels[0], -$this.Amp)
+        generator(OP_SIN, $this.Buf, $p, 1, $d, 0)
+        op_cn(OP_GREATER, $this.Buf, 0)
+        op_cn(OP_MUL, $this.Buf, 2 * $this.Amp)
+        op_cn(OP_ADD, $this.Buf, -$this.Amp)
 
         $this.Phase + $this.Freq * $frames
 
@@ -55,42 +61,6 @@ fn osc_sqr($freq, $amp) {
             $this.Phase % $srate
         }
     }
-    ret ($this)
-}
-
-fn osc_saw($freq, $amp) {
-
-    $this = new()
-
-    $this.Phase = 0
-    $this.Freq = $freq
-    $this.Amp = $amp
-
-    $this.gen = { // $this, $channels, $frames
-        $this = $1
-        $channels = $2
-        $frames = $3
-
-        $srate = get_audio_sample_rate(1)
-        $p = 2 * M_PI * $this.Phase / $srate
-        $d = 2 * M_PI * $this.Freq / $srate
-
-        generator(OP_SIN, $channels[0], $p, 1, $d, 0)
-
-        op_cn(OP_EQUAL, $channels[0], 0)
-        op_cn(OP_SUB, $channels[0], 1)
-        op_cn(OP_H_INTEGRAL, $channels[0])
-
-        op_cn(OP_MUL, $channels[0], 2 * $this.Amp)
-        op_cn(OP_ADD, $channels[0], -$this.Amp)
-
-        $this.Phase + $this.Freq * $frames
-
-        if $this.Phase > $srate {
-            $this.Phase % $srate
-        }
-    }
-
     ret ($this)
 }
 
@@ -99,13 +69,14 @@ fn osc_noise($amp) {
     $this = new()
     $this.Amp = $amp
 
-    $this.gen = { // $this, $channels, $frames
+    $this.gen = { // $this, $frames
         $this = $1
         $frames = $2
         
         if $this.Buf == 0 {
             $this.Buf = new($frames, 1, FLOAT32)
         }
+
         generator(OP_RAND, $this.Buf, 0, $this.Amp)
     }
 
