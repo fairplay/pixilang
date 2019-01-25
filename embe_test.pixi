@@ -13,19 +13,20 @@ resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 // Create mixer
 $m = mix()
 //$noise = osc_noise(0.01)
-$noise = osc_sqr(120, 0.001)
+//$noise = osc_sqr(120, 0.001)
+$noise = osc_noise(0.1)
 //$noise = in(0)
 
-$i = 1 while ($i <= 16) {
-    $comb = comb($i * 80, 0.999)
-    $bp = bq_bp($i * 40, 0.999)
-    j($bp, $noise)
-    j($comb, $bp)
-    j($m, $comb)
+/*$i = 1 while ($i <= 16) {
+    $comb = comb($i * 120, 0.999)
+    $bp = bq_bp($i * 120 , 0.8)
+    j($comb, $noise)
+    j($bp, $comb)
+    j($m, $bp)
     $i + 1
-}
+}*/
 
-$bp = bq_lp(1600, 0.5)
+//$bp = bq_lp(1600, 0.5)
 
 //$o1 = osc_sqr(110, 0.1)
 //$o2 = osc_sin(660, 0.1)
@@ -43,7 +44,7 @@ $bp = bq_lp(1600, 0.5)
 // and resonance value = 100% (if we will use value > 100)
 // filter will start to self-oscillate
 
-$ws = waveshaper({
+/*$ws = waveshaper({
     $v = 2 * $1
     if $v > 0.99 {
         $v = 0.99
@@ -52,26 +53,27 @@ $ws = waveshaper({
         $v = -0.99
     }
     ret ($v)
-})
+})*/
 
-j($bp, $m)
-j($ws, $bp)
+/*j($bp, $m)
+j($ws, $bp)*/
 
 // Create visualizer
-$v1 = vis_fft()
-
+$v = vis_fft()
+j($m, $noise)
 // Join our filter to visualizer
-j($v1, $ws)
+j($v, $m)
+
 
 // Send our filter to the output
-out($ws)
+out($m)
 
 while (1) {
 
-    lfo($bp, "Freq")
-    ar($noise, "Amp")
+    //lfo($bp, "Freq")
+    //ar($noise, "Amp")
     // Some visualization
-    $v1.render($v1)
+    $v.render($v)
 
     while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { halt } }
 }

@@ -8,7 +8,8 @@ fn out($sig) {
         $in_channels,
         $latency_in_frames
     ) {
-        $sig.gen($sig, $channels, $frames, $in_channels)
+        $sig.gen($sig, $frames, $in_channels)
+        copy($channels[0], $sig.Buf)
         ret (1)
     }
 

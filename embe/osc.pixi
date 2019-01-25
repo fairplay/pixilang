@@ -101,10 +101,12 @@ fn osc_noise($amp) {
 
     $this.gen = { // $this, $channels, $frames
         $this = $1
-        $channels = $2
-        $frames = $3
+        $frames = $2
         
-        generator(OP_RAND, $channels[0], 0, $this.Amp)
+        if $this.Buf == 0 {
+            $this.Buf = new($frames, 1, FLOAT32)
+        }
+        generator(OP_RAND, $this.Buf, 0, $this.Amp)
     }
 
     ret ($this)

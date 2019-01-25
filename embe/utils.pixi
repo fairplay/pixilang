@@ -35,14 +35,13 @@ fn mix() {
 
     $this.gen = { // $this, $channels, $frames, $in_channels
         $this = $1
-        $channels = $2
-        $frames = $3
-        $in_channels = $4
+        $frames = $2
+        $in_channels = $3
 
-        clean($channels[0])
-
-        $ch = new()
-        $ch[0] = new($frames, 1, FLOAT32)
+        if $this.Buf == 0 {
+            $this.Buf = new($frames, 1, FLOAT32)
+        }
+        clean($this.Buf)
 
         $signals = $this.signals
         $i = 0 while $i < $this.counter {
@@ -50,12 +49,9 @@ fn mix() {
             $sig = $signals.Head
             $signals = $signals.Tail
 
-            $sig.gen($sig, $ch, $frames, $in_channels)
-            op_cc(OP_ADD, $channels[0], $ch[0], $frames)
+            $sig.gen($sig, $frames, $in_channels)
+            op_cc(OP_ADD, $this.Buf, $sig.Buf, $frames)
         }
-
-        remove($ch[0])
-        remove($ch)
     }
 
     ret ($this)
