@@ -13,20 +13,20 @@ resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 // Create mixer
 $m = mix()
 //$noise = osc_noise(0.01)
-//$noise = osc_sqr(120, 0.001)
+//$noise = osc_sqr(60, 0.001)
 $noise = osc_noise(0.1)
 //$noise = in(0)
 
 $i = 1 while ($i <= 16) {
-    $comb = comb($i * 120, 0.999)
-    $bp = bq_bp($i * 120 , 0.8)
+    $comb = comb($i * 240, 0.999)
+    $bp = bq_bp($i * 60 , 0.9996, 0.25 / $i)
     j($comb, $noise)
     j($bp, $comb)
     j($m, $bp)
     $i + 1
 }
 
-$bp = bq_lp(1600, 0.5)
+//$bp = bq_bp(1200, 0.8, 0.5)
 
 //$o1 = osc_sqr(110, 0.1)
 //$o2 = osc_sin(660, 0.1)
@@ -55,8 +55,8 @@ $ws = waveshaper({
     ret ($v)
 })
 
-j($bp, $m)
-j($ws, $bp)
+//j($bp, $m)
+j($ws, $m)
 
 // Create visualizer
 $v = vis_fft()
@@ -69,7 +69,7 @@ out($ws)
 
 while (1) {
 
-    lfo($bp, "Freq")
+    //lfo($bp, "Freq")
     ar($noise, "Amp")
     // Some visualization
     $v.render($v)

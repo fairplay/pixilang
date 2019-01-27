@@ -1,0 +1,50 @@
+include "embe.pixi"
+include "embe/utils.pixi"
+include "embe/comb.pixi"
+include "embe/biquad.pixi"
+include "embe/osc.pixi"
+include "embe/mod.pixi"
+include "embe/vis.pixi"
+include "embe/waveshaper.pixi"
+
+//set_pixel_size(WINDOW_XSIZE / 240)
+resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
+
+// Create mixer
+$m = mix()
+$noise = osc_noise(1)
+
+$r = 0.9996
+$freq = 220
+
+$bp1 = bq_bp($freq, $r, 0.04)
+$bp2 = bq_bp(3.99 * $freq, $r, 0.01)
+$bp3 = bq_bp(10.65 * $freq, $r, 0.01)
+$bp4 = bq_bp(2443, $r, 0.008)
+
+j($bp1, $noise)
+j($bp2, $noise)
+j($bp3, $noise)
+j($bp4, $noise)
+
+j($m, $bp1)
+j($m, $bp2)
+j($m, $bp3)
+j($m, $bp4)
+
+// Create visualizer
+$v = vis_fft()
+// Join our filter to visualizer
+j($v, $m)
+
+
+// Send our filter to the output
+out($m)
+
+while (1) {
+
+    ar($noise, "Amp")
+    $v.render($v)
+
+    while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { halt } }
+}

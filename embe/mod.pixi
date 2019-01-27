@@ -10,9 +10,9 @@ fn lfo($obj, $prop) {
 }
 
 fn ar($obj, $prop) {
-    $t = (get_timer(0) % 1600) / 100
+    $t = (get_timer(0) % 3200) / 100
 
-    $val = 0.01 / (pow(2, $t))
+    $val = 0.1 / (pow(2, $t))
 
     set_prop($obj, $prop, $val)
 }

@@ -1,28 +1,29 @@
-fn bq_lp($freq, $r) {
-    $bq = biquad($freq, $r, 0)
+fn bq_lp($freq, $r, $amp) {
+    $bq = biquad(0, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
 
-fn bq_hp($freq, $r) {
-    $bq = biquad($freq, $r, 1)
+fn bq_hp($freq, $r, $amp) {
+    $bq = biquad(1, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
 
-fn bq_bp($freq, $r) {
-    $bq = biquad($freq, $r, 2)
+fn bq_bp($freq, $r, $amp) {
+    $bq = biquad(2, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
 
-fn bq_notch($freq, $r) {
-    $bq = biquad($freq, $r, 3)
+fn bq_notch($freq, $r, $amp) {
+    $bq = biquad(3, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
 
-fn biquad($freq, $r, $type) {
+fn biquad($type, $freq, $r, $amp) {
     $this = new()
 
     $this.Type = $type
     $this.Freq = $freq
+    $this.Amp = $amp
 
     $this._alpha = (1 - $r * $r) / 2
 
@@ -45,7 +46,9 @@ fn biquad($freq, $r, $type) {
         $tcos = cos($omega)
         $alpha = $this._alpha
 
-        if filter_type == 0 {
+        $type = $this.Type
+
+        if $type == 0 {
             // lp
             $b0 = (1 - $tcos)/ 2
             $b1 = 1 - $tcos
@@ -55,7 +58,7 @@ fn biquad($freq, $r, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 1 {
+        if $type == 1 {
             // hp
             $b0 = (1 + $tcos)/ 2
             $b1 = -(1 + $tcos)
@@ -65,7 +68,7 @@ fn biquad($freq, $r, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 2 {
+        if $type == 2 {
             // bp
             $b0 = $alpha
             $b1 = 0
@@ -75,7 +78,7 @@ fn biquad($freq, $r, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 3 {
+        if $type == 3 {
             // notch
             $b0 = 1
             $b1 = -2 * $tcos
@@ -85,7 +88,7 @@ fn biquad($freq, $r, $type) {
             $a2 = 1 - $alpha
         }
 
-        if filter_type == 4 {
+        if $type == 4 {
             // ap
             $b0 = 1 - $alpha
             $b1 = -2 * $tcos
@@ -117,6 +120,7 @@ fn biquad($freq, $r, $type) {
 
         $this.signal.gen($this.signal, $frames, $in_channels)
         apply_filter($this._f, $this.Buf, $this.signal.Buf, 0, 0, $frames)
+        op_cn(OP_MUL, $this.Buf, $this.Amp / $this._alpha)
     }
 
     ret ($this)
