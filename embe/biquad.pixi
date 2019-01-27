@@ -1,19 +1,19 @@
-fn bq_lp($freq, $r, $amp) {
+fn lp($freq, $r, $amp) {
     $bq = biquad(0, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
 
-fn bq_hp($freq, $r, $amp) {
+fn hp($freq, $r, $amp) {
     $bq = biquad(1, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
 
-fn bq_bp($freq, $r, $amp) {
+fn bp($freq, $r, $amp) {
     $bq = biquad(2, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
 
-fn bq_notch($freq, $r, $amp) {
+fn notch($freq, $r, $amp) {
     $bq = biquad(3, $freq, $r, $amp)
     ret ($bq.init($bq))
 }
@@ -30,13 +30,6 @@ fn biquad($type, $freq, $r, $amp) {
     $this._a = new(3, 1, FLOAT32) //feedforward filter coefficients
     $this._b = new(2, 1, FLOAT32) //feedback filter coefficients
     $this._f = new_filter() 
-
-    $this.join = { // $this, $sig
-        $this = $1
-        $sig = $2
-
-        $this.signal = $sig
-    }
 
     $this.init = {
         $this = $1
@@ -114,13 +107,11 @@ fn biquad($type, $freq, $r, $amp) {
         $frames = $2
         $in_channels = $3
 
-        if $this.Buf == 0 {
-            $this.Buf = new($frames, 1, FLOAT32)
-        }
-
-        $this.signal.gen($this.signal, $frames, $in_channels)
-        apply_filter($this._f, $this.Buf, $this.signal.Buf, 0, 0, $frames)
-        op_cn(OP_MUL, $this.Buf, $this.Amp / $this._alpha)
+        $sig = new($frames, 1, FLOAT32)
+        apply_filter($this._f, $sig, $this.buf, 0, 0, $frames)
+        op_cn(OP_MUL, $sig, $this.Amp / $this._alpha)
+        
+        ret ($sig)
     }
 
     ret ($this)

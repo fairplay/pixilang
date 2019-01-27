@@ -1,20 +1,148 @@
-fn out($sig) {
+include "embe/list.pixi"
+
+//audio_mutex = mutex_create()
+MAX_GENS = 256
+
+fn embe() {
+    $this = new()
+    $this.gens = new(MAX_GENS, INT16)
+    $this.index = 0;
+
+    $this.add = { // $this, $node
+        $this = $1
+        $node = $2
+
+        $node.ready = 0
+        $node.in_count = 0
+        $node.sink = 0
+
+        $node.clients = -1
+        $node.clients_count = 0
+    
+        if $node.is_gen {
+            $this.gens[$this.index] = $node
+            $this.index + 1
+        }
+
+        $node.process = {
+            $node = $1
+            $embe = $2
+            $frames = $3
+
+            if $node.ready < 0 {
+                ret
+            }
+
+            $sig = $node.gen($node, $frames)
+            if $node.sink > 0 {
+				if $node.out == 0 {
+            		$node.out = new($frames, 1, FLOAT32)
+				}
+            	copy($node.out, $sig)
+            }
+            if $node.buf {
+                remove($node.buf)
+                $node.buf = 0
+            }
+
+            $clients = $node.clients
+            $j = 0 while $j < $node.clients_count {
+                $j + 1
+                $client = $clients.Head
+                $clients = $clients.Tail
+                if $client.ready < 0 {
+                    $embe.push($embe, $client, $sig, $frames)
+                }
+
+                if $client.ready == 0 {
+                    $client.process($client, $embe, $frames)
+                    $client.ready = -$client.in_count
+                }
+            }
+            remove($sig)
+        }
+
+        ret ($this)
+    }
+
+    $this.join = { // $this, $node1 <- $node2
+        $this = $1
+        $node1 = $2
+        $node2 = $3
+
+        $node2.clients = _($node1, $node2.clients)
+        $node2.clients_count + 1
+        $node1.ready - 1
+        $node1.in_count + 1
+    }
+
+    $this.process = { // $this, $frames
+        $this = $1
+        $frames = $2
+
+        $i = 0 while ($i < $this.index) {
+            $node = $this.gens[$i]
+            $node.process($node, $this, $frames)
+            $i + 1
+        }    
+    }
+
+    $this.push = { // $this, $client, $sig, $frames
+        $this = $1
+        $client = $2
+        $sig = $3
+        $frames = $4
+
+        if $client.buf == 0 {
+            $client.buf = new($frames, 1, FLOAT32)
+            clean($client.buf)
+        }
+        op_cc(OP_ADD, $client.buf, $sig, $frames)
+        $client.ready + 1
+    }
+
+    ret ($this)
+}
+
+fn mix($amp) {
+    $this = new()
+    $this.Amp = $amp
+
+    $this.gen = {
+        $this = $1
+        $frames = $2
+
+        $sig = new($frames, 1, FLOAT32)
+        copy($sig, $this.buf)
+        op_cn(OP_MUL, $sig, $this.Amp)
+
+        ret ($sig)
+    }
+
+    ret ($this)
+} 
+
+Embe = embe()
+
+fn out($node) {
+    $node.sink = 1
+
     fn audio_callback(
         $stream,
-        $sig,
+        $node,
         $channels,
         $frames,
         $output_time_in_system_ticks,
         $in_channels,
         $latency_in_frames
     ) {
-        $sig.gen($sig, $frames, $in_channels)
-        copy($channels[0], $sig.Buf)
+        Embe.process(Embe, $frames, $in_channels)
+        copy($channels[0], $node.out)
         ret (1)
     }
 
     enable_audio_input(1)
-    set_audio_callback(audio_callback, $sig, 0, FLOAT32, 1, AUDIO_FLAG_INTERP2)
+    set_audio_callback(audio_callback, $node, 0, FLOAT32, 1, AUDIO_FLAG_INTERP2)
     start_timer(0)
 }
 
@@ -23,3 +151,10 @@ fn shut() {
     set_audio_callback(-1)
 }
 
+fn a($node) {
+    Embe.add(Embe, $node)
+}
+
+fn j($node1, $node2) {
+    Embe.join(Embe, $node1, $node2) 
+}

@@ -1,7 +1,17 @@
-fn lfo($obj, $prop) {
+fn lfo1($obj, $prop) {
     $t = get_timer(0) / 100
 
-    $val = abs(-1 + ($t % 60) / 30) * 4000 + 4000
+    $val = abs(-0.5 + ($t % 240) / 120) * 440 + 220
+
+    set_prop($obj, $prop, $val)
+    if $obj.init {
+        $obj.init($obj)
+    }
+}
+fn lfo2($obj, $prop) {
+    $t = get_timer(0) / 200
+
+    $val = abs(-0.5 + ($t % 40) / 40) * 330 + 220
 
     set_prop($obj, $prop, $val)
     if $obj.init {
@@ -10,9 +20,9 @@ fn lfo($obj, $prop) {
 }
 
 fn ar($obj, $prop) {
-    $t = (get_timer(0) % 3200) / 100
+    $t = (get_timer(0) % 1600) / 100
 
-    $val = 0.1 / (pow(2, $t))
+    $val = 0.25 / (pow(2, $t))
 
     set_prop($obj, $prop, $val)
 }

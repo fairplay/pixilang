@@ -1,13 +1,6 @@
 fn waveshaper($f) {
     $this = new()
 
-    $this.join = { // $this, $sig
-        $this = $1
-        $sig = $2
-
-        $this.signal = $sig
-    }
-
     $this.f = $f
 
     $this.gen = { // $this, $frames
@@ -15,15 +8,14 @@ fn waveshaper($f) {
         $frames = $2
         $in_channels = $3
 
-        if $this.Buf == 0 {
-            $this.Buf = new($frames, 1, FLOAT32)
-        }
-        $this.signal.gen($this.signal, $frames, $in_channels)
+        $sig = new($frames, 1, FLOAT32)
 
         $i = 0 while $i < $frames {
-            $this.Buf[$i] = $this.f($this.signal.Buf[$i])
+            $sig[$i] = $this.f($this.buf[$i])
             $i + 1
         }
+
+        ret ($sig)
     }
     ret ($this)
 }

@@ -1,19 +1,16 @@
-fn vis_waveform() {
+fn vis_waveform($node) {
     $this = new()
 
-    $this.join = { // $this, $sig
-        $this = $1
-        $sig = $2
-        $this.signal = $sig
-    }
+    $this.node = $node
+    $node.sink = 1
 
     $this.render = { // $this
         $this = $1
 
         clear()
-        $frames = get_xsize($this.signal.Buf)
+        $frames = get_xsize($this.node.out)
         $x = 0 while ($x < $frames) {
-            dot($x - $frames / 2, 400 * $this.signal.Buf[$x], 0xFFE0E0)
+            dot($x - $frames / 2, 400 * $this.node.out[$x], 0xFFE0E0)
             $x + 1
         }
         frame()
@@ -22,90 +19,37 @@ fn vis_waveform() {
     ret ($this)
 }
 
-fn vis_fft() {
+fn vis_fft($node) {
     $this = new()
+
+    $this.node = $node
+    $node.sink = 1
 
     fft_size = 1024
     fft_size2 = fft_size div 2
     im = new(fft_size, 1, FLOAT32)
     re = new(fft_size, 1, FLOAT32)
 
-    $this.join = { // $this, $sig
-        $this = $1
-        $sig = $2
-        $this.signal = $sig
-    }
+    scr = get_screen()
+    xsize = get_xsize(scr)
+    ysize = get_ysize(scr)
+    hxsize = xsize div 2
+    hysize = ysize div 2
 
     $this.render = { // $this
         $this = $1
 
         clean(im)
-        copy(re, $this.signal.Buf)
+        copy(re, $this.node.out)
         fft(0, im, re)
 
-        scr = get_screen()
-        xsize = get_xsize(scr)
-        ysize = get_ysize(scr)
-        hxsize = xsize div 2
-        hysize = ysize div 2
-
         clear()
-        $max_amp = 0
-        $max_amp_i = 0
         $i = 0 while ($i < fft_size2) {
             $x = ($i / fft_size2) * xsize - hxsize
             $amp = 16 * sqrt(re[$i] * re[$i] + im[$i] * im[$i]) / fft_size2
-            if ($amp > $max_amp) {
-                $max_amp = $amp
-                $max_amp_i = $i
-            }
             $y = -$amp * hysize
             line($x, 0, $x, $y, #FFFFFF)
             $i + 1
-        }
-        frame()
-    }
-
-    ret ($this)
-}
-
-fn vis_tartan() {
-    $this = new()
-
-    $this.join = { // $this, $sig
-        $this = $1
-        $sig = $2
-        $this.signal = $sig
-    }
-
-    $this.render = { // $this
-        $this = $1
-
-        $frames = get_xsize($this.signal.Buf)
-
-        clear()
-        $sx = 64
-        $sy = 16
-
-        $y = -$sy while $y < $sy {
-            $x = -$sx while $x < $sx {
-
-                $s = $this.signal.Buf[($y + $sy + ($x + $sx) * $sy) % $frames]
-
-                $c = 255
-
-                $clr = get_color($c, $c, $c)
-
-                if $s >= 0.25 {
-                    box(8 * $x + 0, 1 * $y, 2, 0, RED)
-                } else {
-                    box(8 * $x + 2, 1 * $y, 2, 0, BLUE)
-                }
-
-                $x + 1
-            }
-
-            $y + 1
         }
         frame()
     }

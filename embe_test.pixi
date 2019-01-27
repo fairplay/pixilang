@@ -1,48 +1,49 @@
 include "embe.pixi"
-include "embe/utils.pixi"
-include "embe/comb.pixi"
-include "embe/biquad.pixi"
 include "embe/osc.pixi"
 include "embe/mod.pixi"
-include "embe/vis.pixi"
+include "embe/biquad.pixi"
+include "embe/comb.pixi"
 include "embe/waveshaper.pixi"
+include "embe/vis.pixi"
 
 //set_pixel_size(WINDOW_XSIZE / 240)
 resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
-// Create mixer
-$m = mix()
-//$noise = osc_noise(0.01)
-//$noise = osc_sqr(60, 0.001)
-$noise = osc_noise(0.1)
-//$noise = in(0)
+/*$o1 = osc_noise(0.2)
+$o2 = osc_sqr(660, 0.05)
+$o3 = osc_sqr(9900, 0.05)
+$f = lp(440, 0.996, 0.01)
+$c = comb(440, 0.96)
+$m = mix(0.25)
+$ws = waveshaper({
+    $v = $1
+    if $v > 0.99 {
+        $v = 0.99
+    }
+    if $v < -0.99 {
+        $v = -0.99
+    }
+    ret ($v)
+})
 
-$i = 1 while ($i <= 16) {
-    $comb = comb($i * 240, 0.999)
-    $bp = bq_bp($i * 60 , 0.9996, 0.25 / $i)
-    j($comb, $noise)
-    j($bp, $comb)
-    j($m, $bp)
-    $i + 1
-}
+a($o1)
+a($o2)
+a($o3)
+a($m)
+a($c)
+a($f)
+a($ws)
 
-//$bp = bq_bp(1200, 0.8, 0.5)
+j($m, $o1)
+j($m, $o2)
+j($m, $o3)
+j($c, $m)
+j($f, $c)
+j($ws, $f)
 
-//$o1 = osc_sqr(110, 0.1)
-//$o2 = osc_sin(660, 0.1)
-//$o3 = osc_noise(0.1)
-//$in = in(0)
-
-
-// Join ("j") our oscillators to the mixer
-//j($m, $o1)
-//j($m, $o2)
-//j($m, $o3)
-//j($m, $in)
-
-// Create band-pass filter with cutoff frequency == 110Hz
-// and resonance value = 100% (if we will use value > 100)
-// filter will start to self-oscillate
+$v = vis_fft($ws)
+out($ws)
+*/
 
 $ws = waveshaper({
     $v = $1
@@ -55,24 +56,32 @@ $ws = waveshaper({
     ret ($v)
 })
 
-//j($bp, $m)
-j($ws, $m)
+$noise = osc_noise(0.5)
+$lp = lp(2400, 0, 0.5)
 
-// Create visualizer
-$v = vis_fft()
-// Join our filter to visualizer
-j($v, $ws)
+a($lp)
+a($noise)
 
+$i = 1 while ($i <= 12) {
+    $comb = comb($i * 220, 0.98)
+    $bp = bp($i * 55, 0.96, 0.5)
+	a($comb)
+	a($bp)
+    j($comb, $noise)
+    j($bp, $comb)
+    j($lp, $bp)
+    $i + 1
+}
 
-// Send our filter to the output
-out($ws)
+$v = vis_fft($lp)
+out($lp)
 
 while (1) {
-
-    //lfo($bp, "Freq")
+	$v.render($v)
+    //lfo1($c, "Freq")
+    lfo1($lp, "Freq")
     ar($noise, "Amp")
-    // Some visualization
-    $v.render($v)
+    ar($lp, "Amp")
 
-    while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { halt } }
+    while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { shut() halt } }
 }
