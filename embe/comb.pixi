@@ -1,9 +1,10 @@
-fn comb($freq, $fbk) {
+fn comb($freq, $fbk, $amp) {
     $this = new()
 
     $this.Freq = $freq
     $this.Fbk = $fbk
-    
+    $this.Amp = $amp
+ 
     $srate = get_audio_sample_rate(1)
     $this._dly_line = new($srate / 2, 1, FLOAT32)
 
@@ -31,6 +32,7 @@ fn comb($freq, $fbk) {
 
         $sig = clone($this.buf)
 
+        op_cn(OP_MUL, $sig, $this.Amp)
         ret ($sig)
     }
 

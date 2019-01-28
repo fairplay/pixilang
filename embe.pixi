@@ -24,44 +24,6 @@ fn embe() {
             $this.index + 1
         }
 
-        $node.process = {
-            $node = $1
-            $embe = $2
-            $frames = $3
-
-            if $node.ready < 0 {
-                ret
-            }
-
-            $sig = $node.gen($node, $frames)
-            if $node.sink > 0 {
-				if $node.out == 0 {
-            		$node.out = new($frames, 1, FLOAT32)
-				}
-            	copy($node.out, $sig)
-            }
-            if $node.buf {
-                remove($node.buf)
-                $node.buf = 0
-            }
-
-            $clients = $node.clients
-            $j = 0 while $j < $node.clients_count {
-                $j + 1
-                $client = $clients.Head
-                $clients = $clients.Tail
-                if $client.ready < 0 {
-                    $embe.push($embe, $client, $sig, $frames)
-                }
-
-                if $client.ready == 0 {
-                    $client.process($client, $embe, $frames)
-                    $client.ready = -$client.in_count
-                }
-            }
-            remove($sig)
-        }
-
         ret ($this)
     }
 
@@ -82,9 +44,54 @@ fn embe() {
 
         $i = 0 while ($i < $this.index) {
             $node = $this.gens[$i]
-            $node.process($node, $this, $frames)
+            $this.process_node($this, $node, $frames)
             $i + 1
         }    
+    }
+
+    $this.process_node = {
+        $this = $1
+        $node = $2
+        $frames = $3
+
+        if $node.ready < 0 {
+            ret
+        }
+
+        $sig = $node.gen($node, $frames)
+
+        if $node.sink > 0 {
+            if $node.out == 0 {
+                $node.out = new($frames, 1, FLOAT32)
+            }
+            copy($node.out, $sig)
+        }
+        if $node.buf {
+            remove($node.buf)
+            $node.buf = 0
+        }
+
+        $clients = $node.clients
+        $j = 0 while $j < $node.clients_count {
+            $j + 1
+            $client = $clients.Head
+            $clients = $clients.Tail
+
+            if $client.ready == -$client.in_count {
+                $client.buf = new($frames, 1, FLOAT32)
+                clean($client.buf)
+            }
+
+            if $client.ready < 0 {
+                $this.push($this, $client, $sig, $frames)
+            }
+
+            if $client.ready == 0 {
+                $this.process_node($this, $client, $frames)
+                $client.ready = -$client.in_count
+            }
+        }
+        remove($sig)
     }
 
     $this.push = { // $this, $client, $sig, $frames
@@ -93,10 +100,6 @@ fn embe() {
         $sig = $3
         $frames = $4
 
-        if $client.buf == 0 {
-            $client.buf = new($frames, 1, FLOAT32)
-            clean($client.buf)
-        }
         op_cc(OP_ADD, $client.buf, $sig, $frames)
         $client.ready + 1
     }
