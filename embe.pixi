@@ -13,7 +13,6 @@ fn embe() {
 
         $node.ready = 0
         $node.in_count = 0
-        $node.sink = 0
 
         $node.clients = -1
         $node.clients_count = 0
@@ -57,14 +56,12 @@ fn embe() {
             ret
         }
 
+        if $node.gen == 0 {
+            ret
+        }
+
         $sig = $node.gen($node, $frames)
 
-        if $node.sink > 0 {
-            if $node.out == 0 {
-                $node.out = new($frames, 1, FLOAT32)
-            }
-            copy($node.out, $sig)
-        }
         if $node.buf {
             remove($node.buf)
             $node.buf = 0
@@ -77,30 +74,18 @@ fn embe() {
             $clients = $clients.Tail
 
             if $client.ready == -$client.in_count {
-                $client.buf = new($frames, 1, FLOAT32)
-                clean($client.buf)
+                $client.buf = clone($sig)
+                $client.ready + 1
+            } else if $client.ready < 0 {
+                op_cc(OP_ADD, $client.buf, $sig, $frames)
+                $client.ready + 1
             }
-
-            if $client.ready < 0 {
-                $this.push($this, $client, $sig, $frames)
-            }
-
             if $client.ready == 0 {
                 $this.process_node($this, $client, $frames)
                 $client.ready = -$client.in_count
             }
         }
         remove($sig)
-    }
-
-    $this.push = { // $this, $client, $sig, $frames
-        $this = $1
-        $client = $2
-        $sig = $3
-        $frames = $4
-
-        op_cc(OP_ADD, $client.buf, $sig, $frames)
-        $client.ready + 1
     }
 
     ret ($this)
@@ -127,8 +112,6 @@ fn mix($amp) {
 Embe = embe()
 
 fn out($node) {
-    $node.sink = 1
-
     fn audio_callback(
         $stream,
         $node,

@@ -1,8 +1,7 @@
-fn vis_waveform($node) {
+fn vis_waveform() {
     $this = new()
 
-    $this.node = $node
-    $node.sink = 1
+    $this.gen = {}
 
     $this.render = { // $this
         $this = $1
@@ -19,11 +18,10 @@ fn vis_waveform($node) {
     ret ($this)
 }
 
-fn vis_fft($node) {
+fn vis_fft() {
     $this = new()
 
-    $this.node = $node
-    $node.sink = 1
+    $this.gen = {}
 
     fft_size = 1024
     fft_size2 = fft_size div 2
