@@ -1,6 +1,5 @@
 include "embe/list.pixi"
 
-//audio_mutex = mutex_create()
 MAX_GENS = 256
 
 fn embe() {
@@ -18,7 +17,7 @@ fn embe() {
 
         $node.clients = -1
         $node.clients_count = 0
-    
+
         if $node.is_gen {
             $this.gens[$this.index] = $node
             $this.index + 1
@@ -46,7 +45,7 @@ fn embe() {
             $node = $this.gens[$i]
             $this.process_node($this, $node, $frames)
             $i + 1
-        }    
+        }
     }
 
     $this.process_node = {
@@ -123,7 +122,7 @@ fn mix($amp) {
     }
 
     ret ($this)
-} 
+}
 
 Embe = embe()
 
@@ -159,5 +158,5 @@ fn a($node) {
 }
 
 fn j($node1, $node2) {
-    Embe.join(Embe, $node1, $node2) 
+    Embe.join(Embe, $node1, $node2)
 }
