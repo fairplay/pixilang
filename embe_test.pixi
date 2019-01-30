@@ -43,7 +43,6 @@ j($ws, $f)
 
 $v = vis_fft($ws)
 out($ws)
-*/
 
 $ws = waveshaper({
     $v = $1
@@ -54,17 +53,21 @@ $ws = waveshaper({
         $v = -0.99
     }
     ret ($v)
-})
+})*/
+
 
 $noise = osc_noise(0.25)
-$lp = lp(4400, 0.8, 0.001)
+$lp = lp(4400, 0.9, 0.005)
+$out = out()
 
 a($lp)
 a($noise)
+a($out)
+j($out, $lp)
 
 $i = 1 while ($i <= 64) {
-    $comb = comb($i * 32, 0.996, 0.25)
-    $bp = bp($i * 64, 0.999, 0.25)
+    $comb = comb($i * 32, 0.996, 0.1)
+    $bp = bp($i * 64, 0.999, 0.1)
 	a($comb)
 	a($bp)
     j($comb, $noise)
@@ -73,18 +76,24 @@ $i = 1 while ($i <= 64) {
     $i * 1.61834
 }
 
-$v = vis_waveform($lp)
-out($lp)
+$v = vis_fft()
+j($v, $lp)
+
+run($out)
 
 while (1) {
-	$v.render($v)
+    $v.render($v)
     lfo1($lp, "Freq")
     ar($noise, "Amp")
 
     while(get_event()) {
         if EVT[ EVT_TYPE ] == EVT_QUIT {
-            shut()
-            halt
+            Embe.shut = 1
         }
+    }
+
+    if Embe.shut {
+        shut()
+        halt    
     }
 }

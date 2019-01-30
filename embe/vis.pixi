@@ -1,15 +1,21 @@
+scr = get_screen()
+xsize = get_xsize(scr)
+ysize = get_ysize(scr)
+hxsize = xsize div 2
+hysize = ysize div 2
+
 fn vis_waveform() {
     $this = new()
 
-    $this.gen = {}
-
+    $this.gen = {ret (0)}
+    
     $this.render = { // $this
         $this = $1
 
         clear()
-        $frames = get_xsize($this.node.out)
+        $frames = get_xsize($this.buf)
         $x = 0 while ($x < $frames) {
-            dot($x - $frames / 2, 400 * $this.node.out[$x], 0xFFE0E0)
+            dot(hxsize / $frames * 2 * ($x - $frames / 2), hysize * $this.buf[$x], 0xFFFFFF)
             $x + 1
         }
         frame()
@@ -21,24 +27,18 @@ fn vis_waveform() {
 fn vis_fft() {
     $this = new()
 
-    $this.gen = {}
-
     fft_size = 1024
     fft_size2 = fft_size div 2
     im = new(fft_size, 1, FLOAT32)
     re = new(fft_size, 1, FLOAT32)
 
-    scr = get_screen()
-    xsize = get_xsize(scr)
-    ysize = get_ysize(scr)
-    hxsize = xsize div 2
-    hysize = ysize div 2
+    $this.gen = {ret (0)}
 
     $this.render = { // $this
         $this = $1
 
         clean(im)
-        copy(re, $this.node.out)
+        copy(re, $this.buf)
         fft(0, im, re)
 
         clear()
