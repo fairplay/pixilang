@@ -1,7 +1,7 @@
 fn lfo1($obj, $prop) {
-    $t = get_timer(0) / 100
+    $t = get_timer(0) / 333
 
-    $val = abs(-0.5 + ($t % 240) / 120) * 4400 + 4400
+    $val = abs(-0.5 + ($t % 240) / 120) * 2200 + 4400
 
     set_prop($obj, $prop, $val)
     if $obj.init {

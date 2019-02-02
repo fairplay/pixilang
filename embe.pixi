@@ -79,6 +79,7 @@ fn embe() {
                 if $client.ready == -$client.in_count {
                     if $client.buf == 0 {
                         $client.buf = new($frames, 1, FLOAT32)
+                        clean($client.buf)
                     }
                     copy($client.buf, $sig)
                 } else {
@@ -153,6 +154,7 @@ fn shut() {
 
 fn a($node) {
     Embe.add(Embe, $node)
+    ret ($node)
 }
 
 fn j($node1, $node2) {

@@ -7,73 +7,33 @@ include "embe/waveshaper.pixi"
 include "embe/vis.pixi"
 
 //set_pixel_size(WINDOW_XSIZE / 240)
-resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
+//resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
-/*$o1 = osc_noise(0.2)
-$o2 = osc_sqr(660, 0.05)
-$o3 = osc_sqr(9900, 0.05)
-$f = lp(440, 0.996, 0.01)
-$c = comb(440, 0.96)
-$m = mix(0.25)
-$ws = waveshaper({
+$ws = a(waveshaper({
     $v = $1
-    if $v > 0.99 {
+    /*if $v > 0.99 {
         $v = 0.99
     }
     if $v < -0.99 {
         $v = -0.99
-    }
+    }*/
     ret ($v)
-})
-
-a($o1)
-a($o2)
-a($o3)
-a($m)
-a($c)
-a($f)
-a($ws)
-
-j($m, $o1)
-j($m, $o2)
-j($m, $o3)
-j($c, $m)
-j($f, $c)
-j($ws, $f)
-
-$v = vis_fft($ws)
-out($ws)
-
-$ws = waveshaper({
-    $v = $1
-    if $v > 0.99 {
-        $v = 0.99
-    }
-    if $v < -0.99 {
-        $v = -0.99
-    }
-    ret ($v)
-})*/
+}))
 
 
-$noise = osc_noise(0.25)
-$lp = lp(4400, 0.9, 0.005)
-$out = out()
+$noise = a(osc_noise(0.25))
+$lp = a(lp(4400, 0.9, 0.005))
+$out = a(out())
 
-a($lp)
-a($noise)
-a($out)
 j($out, $lp)
 
 $i = 1 while ($i <= 64) {
-    $comb = comb($i * 32, 0.996, 0.1)
-    $bp = bp($i * 64, 0.999, 0.1)
-	a($comb)
-	a($bp)
+    $comb = a(comb($i * 32, 0.999, 0.1))
+    $bp = a(bp($i * 32, 0.8, 0.5))
     j($comb, $noise)
     j($bp, $comb)
     j($lp, $bp)
-    $i * 1.61834
+    $i + 1.61834
 }
 
 $v = vis_fft()

@@ -14,7 +14,6 @@ fn waveshaper($f) {
             $sig[$i] = $this.f($this.buf[$i])
             $i + 1
         }
-
         ret ($sig)
     }
     ret ($this)
