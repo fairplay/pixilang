@@ -1,0 +1,46 @@
+fn UI() {
+    $this = new()
+
+    $this.draw = {
+        $el = $1
+        pixi($el, $el.x, $el.y)
+    }
+
+    $this.Canvas = {
+        $parent = $1
+        $x = $2
+        $y = $3
+        $w = $4
+        $h = $5
+        $color = $6
+
+        $this = new($w, $h, PIXEL)
+        $this.x = $x
+        $this.y = $y
+
+        clean($this, $color)
+
+        ret ($this)
+    }
+
+    $this.Push = {
+        $parent = $1
+        $x = $2
+        $y = $3
+        $w = $4
+        $h = $5
+        $color = $6
+
+        $this = new($w, $h, PIXEL)
+        $this.x = $x + $parent.x
+        $this.y = $y + $parent.y
+
+        clean($this, $color)
+
+        ret ($this)
+    }
+
+    ret ($this)
+}
+
+
