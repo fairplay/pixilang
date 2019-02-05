@@ -1,12 +1,15 @@
+BOX_PAD = 2
+
 fn UI() {
-    $this = new()
+    $ui = new()
 
-    $this.draw = {
+    $ui.draw = {
         $el = $1
-        pixi($el, $el.x, $el.y)
+        pixi($el, $el.x - $el.parent.x, $el.y - $el.parent.y)
+        pixi($el.top, $el.top.x - $el.parent.x, $el.top.y - $el.parent.y)
     }
 
-    $this.Canvas = {
+    $ui.Box = {
         $parent = $1
         $x = $2
         $y = $3
@@ -14,33 +17,65 @@ fn UI() {
         $h = $5
         $color = $6
 
-        $this = new($w, $h, PIXEL)
-        $this.x = $x
-        $this.y = $y
+        $el = new($w, $h, PIXEL)
+        clean($el, $color)
+        op_cn(OP_COPY, $el, $parent.color, BOX_PAD, BOX_PAD, $w - 2 * BOX_PAD, $h - 2 * BOX_PAD)
 
-        clean($this, $color)
+        $el.x = $x + $w / 2
+        $el.y = $y + $h / 2
+        $el.w = $w
+        $el.h = $h
+        $el.parent = $parent
+        $el.color = $color
 
-        ret ($this)
+
+        ret ($el)
     }
 
-    $this.Push = {
-        $parent = $1
-        $x = $2
-        $y = $3
-        $w = $4
-        $h = $5
-        $color = $6
+    $ui.Screen = {
+        $el = get_screen()
 
-        $this = new($w, $h, PIXEL)
-        $this.x = $x + $parent.x
-        $this.y = $y + $parent.y
+        $w = get_xsize($el)
+        $h = get_ysize($el)
 
-        clean($this, $color)
+        $el.w = $w
+        $el.h = $h
+        $el.x = $w / 2
+        $el.y = $h / 2
+        $el.color = BLACK
 
-        ret ($this)
+        ret ($el)
     }
 
-    ret ($this)
+    $ui.Canvas = {
+        $el = $1.Box($2, $3, $4, $5, $6, $7)
+
+        ret ($el)
+    }
+
+    $ui.Push = {
+        $el = $1.Box($2, $3, $4, $5, $5, $6)
+
+        $el.val = 0
+        
+        $el.top = new($el.w / 2, $el.h / 2)
+        $el.top.x = $el.x 
+        $el.top.y = $el.y 
+        $el.set = {
+            $el = $1
+
+            if $el.val > 0 {
+                clean($el.top, $el.color)
+            } else {
+                clean($el.top, $el.parent.color)
+            }
+        }
+        $el.set()
+
+        ret ($el)
+    }
+
+    ret ($ui)
 }
 
 

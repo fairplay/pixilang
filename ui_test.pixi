@@ -1,22 +1,50 @@
 include "ui.pixi"
 
-//$screen = set_screen(GL_SCREEN)
-$screen = get_screen()
+//set_pixel_size( WINDOW_XSIZE / 480 )
+resize( get_screen(), WINDOW_XSIZE, WINDOW_YSIZE )
 
-SCREEN_W = get_xsize($screen)
-SCREEN_H = get_ysize($screen)
+
 PAD = 8
 
 $ui = UI()
-$canvas = $ui.Canvas(0, PAD, PAD, SCREEN_W - 2 * PAD, SCREEN_H - 2 * PAD, WHITE)
-$push1 = $ui.Push($canvas, 16, 16, 16, 16, RED)
-$push2 = $ui.Push($canvas, 40, 16, 16, 16, GREEN)
+$screen = $ui.Screen()
+$canvas = $ui.Canvas($ui, $screen, PAD, PAD, $screen.w - 2 * PAD, $screen.h - 2 * PAD, BLACK)
+$push1 = $ui.Push($ui, $canvas, 32, 32, 32, RED)
+$push2 = $ui.Push($ui, $canvas, 96, 32, 32, #55aa44)
 
-while( 1 ) { 
+/*fn gl_cb($ui) {
+    set_screen(GL_SCREEN)
     $ui.draw($canvas)
     $ui.draw($push1)
     $ui.draw($push2)
-    while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { break2 } }
+}
+
+set_gl_callback(gl_cb, $ui)
+*/
+
+while 1 { 
+    $ui.draw($canvas)
+    $ui.draw($push1)
+    $ui.draw($push2)
+
+    while get_event() {
+        if EVT[EVT_TYPE] == EVT_QUIT {
+            break2
+        }
+        if EVT[EVT_TYPE] == EVT_MOUSEBUTTONDOWN {
+            if
+                EVT[EVT_X] >= $push1.x - $push1.parent.x - $push1.w / 2
+                && EVT[EVT_X] <= $push1.x + $push1.w / 2 - $push1.parent.x
+                && EVT[EVT_Y] >= $push1.y - $push1.parent.y - $push1.h / 2
+                && EVT[EVT_Y] <= $push1.y + $push1.h / 2- $push1.parent.y
+            {
+                $push1.val = 1 - $push1.val
+                $push1.set($push1)
+
+            }
+
+        }
+    }
     frame() 
 }
 

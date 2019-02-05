@@ -1,3 +1,24 @@
+fn osc_imp($amp) {
+
+    $this = new()
+    $this.Amp = $amp
+    $this.is_gen = 1
+
+    $this.gen = { // $this, $frames
+        $this = $1
+        $frames = $2
+
+        $sig = new($frames, 1, FLOAT32)
+        clean($sig, 0)
+        envelope2p($sig, 0, 0, 0, 32, $this.Amp, -$this.Amp)
+        $this.Amp = 0
+
+        ret ($sig)
+    }
+
+    ret ($this)
+}
+
 fn osc_noise($amp) {
 
     $this = new()

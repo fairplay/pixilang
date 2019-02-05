@@ -1,26 +1,28 @@
 include "embe.pixi"
-include "embe/utils.pixi"
 include "embe/comb.pixi"
 include "embe/biquad.pixi"
 include "embe/osc.pixi"
-include "embe/mod.pixi"
 include "embe/vis.pixi"
-include "embe/waveshaper.pixi"
 
-//set_pixel_size(WINDOW_XSIZE / 240)
-resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
+fn ar($obj, $prop) {
+    $t = (get_timer(0) % 256) / 16
 
-// Create mixer
-$m = mix()
-$noise = osc_noise(1)
+    $val = 1 / (pow(64, $t))
 
-$r = 0.9996
+    set_prop($obj, $prop, $val)
+}
+
+$r = 0.996
 $freq = 220
 
-$bp1 = bq_bp($freq, $r, 0.04)
-$bp2 = bq_bp(3.99 * $freq, $r, 0.01)
-$bp3 = bq_bp(10.65 * $freq, $r, 0.01)
-$bp4 = bq_bp(2443, $r, 0.008)
+$o = a(out())
+$noise = a(osc_noise(1))
+$m = a(bp($freq, 0.9, 0.5))
+
+$bp1 = a(comb($freq, $r, 0.04))
+$bp2 = a(comb(3.99 * $freq, $r, 0.01))
+$bp3 = a(comb(10.65 * $freq, $r, 0.01))
+$bp4 = a(comb(2443, $r, 0.008))
 
 j($bp1, $noise)
 j($bp2, $noise)
@@ -32,14 +34,11 @@ j($m, $bp2)
 j($m, $bp3)
 j($m, $bp4)
 
-// Create visualizer
 $v = vis_fft()
-// Join our filter to visualizer
 j($v, $m)
+j($o, $m)
 
-
-// Send our filter to the output
-out($m)
+run($o)
 
 while (1) {
 
