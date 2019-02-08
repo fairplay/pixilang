@@ -3,6 +3,8 @@ BOX_PAD = 2
 fn UI() {
     $ui = new()
 
+    //$ui.elements = 
+
     $ui.draw = {
         $el = $1
         pixi($el, $el.x - $el.parent.x, $el.y - $el.parent.y)

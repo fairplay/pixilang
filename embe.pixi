@@ -1,4 +1,4 @@
-include "embe/list.pixi"
+include "list.pixi"
 
 MAX_GENS = 256
 
@@ -15,7 +15,6 @@ fn embe() {
         $node.in_count = 0
 
         $node.clients = -1
-        $node.clients_count = 0
 
         if $node.is_gen {
             $this.gens[$this.index] = $node
@@ -31,7 +30,6 @@ fn embe() {
         $node2 = $3
 
         $node2.clients = _($node1, $node2.clients)
-        $node2.clients_count + 1
         $node1.ready - 1
         $node1.in_count + 1
     }
@@ -70,8 +68,7 @@ fn embe() {
         }
 
         $clients = $node.clients
-        $j = 0 while $j < $node.clients_count {
-            $j + 1
+        while $clients.Head > 0 {
             $client = $clients.Head
             $clients = $clients.Tail
 
