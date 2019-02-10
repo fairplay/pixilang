@@ -1,4 +1,4 @@
-include "list.pixi"
+include "../list.pixi"
 
 fn in($channel_id) {
     $this = new()

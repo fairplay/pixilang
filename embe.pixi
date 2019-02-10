@@ -37,9 +37,6 @@ fn embe() {
     $this.process = { // $this, $frames
         $this = $1
         $frames = $2
-        if $this.shut > 0 {
-            ret
-        }
         $i = 0 while ($i < $this.index) {
             $node = $this.gens[$i]
             $this.process_node($this, $node, $frames)

@@ -1,50 +1,48 @@
 include "ui.pixi"
 
-//set_pixel_size( WINDOW_XSIZE / 480 )
-resize( get_screen(), WINDOW_XSIZE, WINDOW_YSIZE )
+//set_pixel_size(WINDOW_XSIZE / 480)
+resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
-
-PAD = 8
+PADDING = 32
 
 $ui = UI()
-$screen = $ui.Screen()
-$canvas = $ui.Canvas($ui, $screen, PAD, PAD, $screen.w - 2 * PAD, $screen.h - 2 * PAD, BLACK)
-$push1 = $ui.Push($ui, $canvas, 32, 32, 32, RED)
-$push2 = $ui.Push($ui, $canvas, 96, 32, 32, #55aa44)
+$screen = $ui.Screen($ui)
+$canvas = $ui.Canvas($ui, $screen, PADDING, PADDING, $screen.w - 2 * PADDING, $screen.h - 2 * PADDING, BLACK)
 
-/*fn gl_cb($ui) {
+$min_size = $canvas.w if $min_size > $canvas.h {$min_size = $canvas.h}
+
+//$push1 = $ui.Push($ui, $canvas, 32, 32, 32, 32, RED)
+//$push2 = $ui.Push($ui, $canvas, 96, 32, 32, 32, #55aa44)
+//$vslider = $ui.VSlider($ui, $canvas, 160, 32, 32, 256, #ffffff)
+//$hslider = $ui.HSlider($ui, $canvas, 160, 320, 256, 32, #99aaff)
+$pad = $ui.Pad($ui, $canvas, 0, 0, $min_size, $min_size, #99aaff)
+
+
+fn gl_cb($ui) {
     set_screen(GL_SCREEN)
-    $ui.draw($canvas)
-    $ui.draw($push1)
-    $ui.draw($push2)
+    $ui.draw($ui)
+    set_screen($ui.screen)
 }
 
-set_gl_callback(gl_cb, $ui)
-*/
+//set_gl_callback(gl_cb, $ui)
 
-while 1 { 
-    $ui.draw($canvas)
-    $ui.draw($push1)
-    $ui.draw($push2)
+while (1) {
+    $ui.draw($ui)
 
     while get_event() {
-        if EVT[EVT_TYPE] == EVT_QUIT {
-            break2
+        $evt_type = EVT[EVT_TYPE]
+        $evt_key = EVT[EVT_KEY]
+
+        if $evt_type == EVT_QUIT {
+            breakall
         }
-        if EVT[EVT_TYPE] == EVT_MOUSEBUTTONDOWN {
-            if
-                EVT[EVT_X] >= $push1.x - $push1.parent.x - $push1.w / 2
-                && EVT[EVT_X] <= $push1.x + $push1.w / 2 - $push1.parent.x
-                && EVT[EVT_Y] >= $push1.y - $push1.parent.y - $push1.h / 2
-                && EVT[EVT_Y] <= $push1.y + $push1.h / 2- $push1.parent.y
-            {
-                $push1.val = 1 - $push1.val
-                $push1.set($push1)
-
-            }
-
+        if
+            ($evt_type == EVT_MOUSEBUTTONDOWN
+            || $evt_type == EVT_MOUSEMOVE) && $evt_key == KEY_MOUSE_LEFT
+        {
+            $ui.evt_dispatch($ui)
         }
     }
-    frame() 
+    frame()
 }
 

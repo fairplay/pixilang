@@ -27,7 +27,7 @@ $out = a(out())
 
 j($out, $lp)
 
-$i = 1 while ($i <= 64) {
+$i = 1 while ($i <= 16) {
     $comb = a(comb($i * 32, 0.999, 0.1))
     $bp = a(bp($i * 32, 0.8, 0.5))
     j($comb, $noise)
@@ -48,12 +48,9 @@ while (1) {
 
     while(get_event()) {
         if EVT[ EVT_TYPE ] == EVT_QUIT {
-            Embe.shut = 1
+            break2
         }
     }
-
-    if Embe.shut {
-        shut()
-        halt    
-    }
 }
+shut()
+halt    

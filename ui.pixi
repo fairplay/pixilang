@@ -1,41 +1,53 @@
+include "list.pixi"
+
+BOX_BRD = 1
 BOX_PAD = 2
 
 fn UI() {
     $ui = new()
 
-    //$ui.elements = 
+    $ui.elements = -1
+
+    // methods
 
     $ui.draw = {
-        $el = $1
-        pixi($el, $el.x - $el.parent.x, $el.y - $el.parent.y)
-        pixi($el.top, $el.top.x - $el.parent.x, $el.top.y - $el.parent.y)
+        $ui = $1
+        $elements = $ui.elements
+        while $elements.Head > 0 {
+            $el = $elements.Head
+            $elements = $elements.Tail
+            pixi($el, $el.x - $el.parent.x, $el.y - $el.parent.y)
+        }
     }
 
-    $ui.Box = {
-        $parent = $1
-        $x = $2
-        $y = $3
-        $w = $4
-        $h = $5
-        $color = $6
+    $ui.evt_dispatch = {
+        $ui = $1
 
-        $el = new($w, $h, PIXEL)
-        clean($el, $color)
-        op_cn(OP_COPY, $el, $parent.color, BOX_PAD, BOX_PAD, $w - 2 * BOX_PAD, $h - 2 * BOX_PAD)
+        $elements = $ui.elements
+        while $elements.Head > 0 {
+            $el = $elements.Head
+            $elements = $elements.Tail
 
-        $el.x = $x + $w / 2
-        $el.y = $y + $h / 2
-        $el.w = $w
-        $el.h = $h
-        $el.parent = $parent
-        $el.color = $color
+            $x0 = EVT[EVT_X]
+            $y0 = EVT[EVT_Y]
 
-
-        ret ($el)
+            if $x0 >= $el.x - $el.parent.x - $el.w / 2
+            && $x0 <= $el.x - $el.parent.x + $el.w / 2
+            && $y0 >= $el.y - $el.parent.y - $el.h / 2
+            && $y0 <= $el.y - $el.parent.y + $el.h / 2 {
+                $dx = -($el.x - $el.parent.x - $el.w / 2 - $x0) / $el.w
+                $dy = -($el.y - $el.parent.y - $el.h / 2 - $y0) / $el.h
+                $el.set($el, $dx, $dy)
+            }
+        }
     }
+
+    // elements
 
     $ui.Screen = {
+        $ui = $1
         $el = get_screen()
+        $ui.screen = $el
 
         $w = get_xsize($el)
         $h = get_ysize($el)
@@ -49,33 +61,123 @@ fn UI() {
         ret ($el)
     }
 
+    $ui._box = {
+        $parent = $1
+        $x = $2
+        $y = $3
+        $w = $4
+        $h = $5
+        $color = $6
+
+        $el = new($w, $h, PIXEL)
+        clean($el, $color)
+        op_cn(OP_COPY, $el, $el.parent.color, BOX_BRD, BOX_BRD, $w - 2 * BOX_BRD, $h - 2 * BOX_BRD)
+
+        $el.x = $x + $w / 2
+        $el.y = $y + $h / 2
+        $el.w = $w
+        $el.h = $h
+        $el.parent = $parent
+        $el.color = $color
+
+        ret ($el)
+    }
+
     $ui.Canvas = {
-        $el = $1.Box($2, $3, $4, $5, $6, $7)
+        $el = $1._box($2, $3, $4, $5, $6, $7)
 
         ret ($el)
     }
 
     $ui.Push = {
-        $el = $1.Box($2, $3, $4, $5, $5, $6)
+        $ui = $1
+        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $ui.elements = _($el, $ui.elements)
 
-        $el.val = 0
-        
-        $el.top = new($el.w / 2, $el.h / 2)
-        $el.top.x = $el.x 
-        $el.top.y = $el.y 
+        $el.val = 1
+
         $el.set = {
             $el = $1
+            $el.val = 1 - $el.val
 
             if $el.val > 0 {
-                clean($el.top, $el.color)
+                op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
             } else {
-                clean($el.top, $el.parent.color)
+                op_cn(OP_COPY, $el, $el.parent.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
             }
         }
-        $el.set()
 
+        $el.set($el)
         ret ($el)
     }
+
+    $ui.VSlider = {
+        $ui = $1
+        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $ui.elements = _($el, $ui.elements)
+
+        $el.val = 0
+
+        $el.set = {
+            $el = $1
+            $dx = $2
+            $dy = $3
+
+            $el.val = 1 - $dy
+            op_cn(OP_COPY, $el, $el.color, BOX_PAD, $dy * $el.h + BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - $dy * $el.h - 2 * BOX_PAD)
+            op_cn(OP_COPY, $el, $el.parent.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $dy * $el.h - 2 * BOX_PAD)
+        }
+
+        $el.set($el, 0, 1)
+        ret ($el)
+    }
+
+    $ui.HSlider = {
+        $ui = $1
+        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $ui.elements = _($el, $ui.elements)
+
+        $el.val = 0
+
+        $el.set = {
+            $el = $1
+            $dx = $2
+            $dy = $3
+
+            $el.val = $dx
+            op_cn(OP_COPY, $el, $el.parent.color, $dx * $el.w + BOX_PAD, BOX_PAD, $el.w - $dx * $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+            op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $dx * $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+        }
+
+        $el.set($el, 0, 1)
+        ret ($el)
+    }
+
+    $ui.Pad = {
+        $ui = $1
+        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $ui.elements = _($el, $ui.elements)
+
+        $el.val = 0
+
+        $el.set = {
+            $el = $1
+            $dx = $2
+            $dy = $3
+
+            $el.val_x = $dx
+            $el.val_y = 1 - $dy
+
+            op_cn(OP_COPY, $el, $el.parent.color, BOX_BRD, BOX_BRD, $el.w - 2 * BOX_BRD, $el.h - 2 * BOX_BRD)
+            op_cn(OP_COPY, $el, $el.color, $dx * $el.w - 5 * BOX_BRD, $dy * $el.h - 5 * BOX_BRD, 10 * BOX_BRD, 10 * BOX_BRD)
+            op_cn(OP_COPY, $el, $el.color, $dx * $el.w, 0, BOX_BRD, $el.h)
+            op_cn(OP_COPY, $el, $el.color, 0, $dy * $el.h, $el.w, BOX_BRD)
+        }
+
+        $el.set($el, 0.5, 0.5)
+        ret ($el)
+    }
+
 
     ret ($ui)
 }
