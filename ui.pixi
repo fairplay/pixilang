@@ -11,13 +11,18 @@ fn UI() {
     // methods
 
     $ui.draw = {
-        $ui = $1
-        $elements = $ui.elements
-        while $elements.Head > 0 {
+        fn draw_list($elements) {
             $el = $elements.Head
-            $elements = $elements.Tail
-            pixi($el, $el.x - $el.parent.x, $el.y - $el.parent.y)
+            if $elements.Tail > -1 {
+                draw_list($elements.Tail)
+            }
+            $gfx = clone($el)
+            pixi($gfx, $el.x, $el.y)
+            remove($gfx)
         }
+
+        $ui = $1
+        draw_list($ui.elements)
     }
 
     $ui.evt_dispatch = {
@@ -52,11 +57,11 @@ fn UI() {
         $w = get_xsize($el)
         $h = get_ysize($el)
 
+        $el.x = 0
+        $el.y = 0
         $el.w = $w
         $el.h = $h
-        $el.x = $w / 2
-        $el.y = $h / 2
-        $el.color = BLACK
+        $el.color = #000000
 
         ret ($el)
     }
@@ -69,22 +74,26 @@ fn UI() {
         $h = $5
         $color = $6
 
-        $el = new($w, $h, PIXEL)
+        $el = new($w, $h)
         clean($el, $color)
         op_cn(OP_COPY, $el, $el.parent.color, BOX_BRD, BOX_BRD, $w - 2 * BOX_BRD, $h - 2 * BOX_BRD)
 
-        $el.x = $x + $w / 2
-        $el.y = $y + $h / 2
+        $el.x = $x + ($w - $parent.w) / 2 + $parent.x
+        $el.y = $y + ($h - $parent.h) / 2 + $parent.y
         $el.w = $w
         $el.h = $h
         $el.parent = $parent
         $el.color = $color
 
+        $el.set = {}
+
         ret ($el)
     }
 
     $ui.Canvas = {
-        $el = $1._box($2, $3, $4, $5, $6, $7)
+        $ui = $1
+        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $ui.elements = _($el, $ui.elements)
 
         ret ($el)
     }
@@ -107,7 +116,7 @@ fn UI() {
             }
         }
 
-        $el.set($el)
+        $el.set($el, 0, 1)
         ret ($el)
     }
 

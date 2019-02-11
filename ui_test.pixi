@@ -7,16 +7,15 @@ PADDING = 32
 
 $ui = UI()
 $screen = $ui.Screen($ui)
-$canvas = $ui.Canvas($ui, $screen, PADDING, PADDING, $screen.w - 2 * PADDING, $screen.h - 2 * PADDING, BLACK)
+$canvas = $ui.Canvas($ui, $screen, PADDING, PADDING, $screen.w - 2 * PADDING, $screen.h - 2 * PADDING, #000000)
 
 $min_size = $canvas.w if $min_size > $canvas.h {$min_size = $canvas.h}
 
-//$push1 = $ui.Push($ui, $canvas, 32, 32, 32, 32, RED)
-//$push2 = $ui.Push($ui, $canvas, 96, 32, 32, 32, #55aa44)
-//$vslider = $ui.VSlider($ui, $canvas, 160, 32, 32, 256, #ffffff)
-//$hslider = $ui.HSlider($ui, $canvas, 160, 320, 256, 32, #99aaff)
+$push1 = $ui.Push($ui, $canvas, $min_size + 32, 0, 32, 32, RED)
+$push2 = $ui.Push($ui, $canvas, $min_size + 96, 0, 32, 32, #55aa44)
+$vslider = $ui.VSlider($ui, $canvas, $min_size + 160, 0, 32, 256, #ffffff)
+$hslider = $ui.HSlider($ui, $canvas, $min_size + 32, 320, 256, 32, #99aaff)
 $pad = $ui.Pad($ui, $canvas, 0, 0, $min_size, $min_size, #99aaff)
-
 
 fn gl_cb($ui) {
     set_screen(GL_SCREEN)
@@ -24,10 +23,10 @@ fn gl_cb($ui) {
     set_screen($ui.screen)
 }
 
-//set_gl_callback(gl_cb, $ui)
+set_gl_callback(gl_cb, $ui)
 
 while (1) {
-    $ui.draw($ui)
+    //$ui.draw($ui)
 
     while get_event() {
         $evt_type = EVT[EVT_TYPE]
@@ -46,3 +45,4 @@ while (1) {
     frame()
 }
 
+set_gl_callback(-1)
