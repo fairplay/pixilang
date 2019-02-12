@@ -11,8 +11,8 @@ $canvas = $ui.Canvas($ui, $screen, PADDING, PADDING, $screen.w - 2 * PADDING, $s
 
 $min_size = $canvas.w if $min_size > $canvas.h {$min_size = $canvas.h}
 
-$push1 = $ui.Push($ui, $canvas, $min_size + 32, 0, 32, 32, RED)
-$push2 = $ui.Push($ui, $canvas, $min_size + 96, 0, 32, 32, #55aa44)
+$push = $ui.Push($ui, $canvas, $min_size + 32, 0, 32, 32, RED)
+$toggle = $ui.Toggle($ui, $canvas, $min_size + 96, 0, 32, 32, #55aa44)
 $vslider = $ui.VSlider($ui, $canvas, $min_size + 160, 0, 32, 256, #ffffff)
 $hslider = $ui.HSlider($ui, $canvas, $min_size + 32, 320, 256, 32, #99aaff)
 $pad = $ui.Pad($ui, $canvas, 0, 0, $min_size, $min_size, #99aaff)
@@ -26,20 +26,35 @@ fn gl_cb($ui) {
 set_gl_callback(gl_cb, $ui)
 
 while (1) {
-    //$ui.draw($ui)
-
     while get_event() {
         $evt_type = EVT[EVT_TYPE]
         $evt_key = EVT[EVT_KEY]
 
-        if $evt_type == EVT_QUIT {
+        if
+            $evt_type == EVT_QUIT
+        {
             breakall
         }
+
         if
-            ($evt_type == EVT_MOUSEBUTTONDOWN
-            || $evt_type == EVT_MOUSEMOVE) && $evt_key == KEY_MOUSE_LEFT
+            ($evt_type == EVT_MOUSEMOVE && $evt_key == KEY_MOUSE_LEFT)
+            || $evt_type == EVT_TOUCHMOVE
         {
-            $ui.evt_dispatch($ui)
+            $ui.evt_dispatch($ui, "evt_drag")
+        }
+
+        if
+            ($evt_type == EVT_MOUSEBUTTONDOWN && $evt_key == KEY_MOUSE_LEFT)
+            || $evt_type == EVT_TOUCHBEGIN
+        {
+            $ui.evt_dispatch($ui, "evt_click")
+        }
+
+        if
+            ($evt_type == EVT_MOUSEBUTTONUP && $evt_key == KEY_MOUSE_LEFT)
+            || $evt_type == EVT_TOUCHEND
+        {
+            $ui.evt_dispatch($ui, "evt_release")
         }
     }
     frame()

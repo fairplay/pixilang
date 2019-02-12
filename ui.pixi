@@ -1,7 +1,7 @@
 include "list.pixi"
 
 BOX_BRD = 1
-BOX_PAD = 2
+BOX_PAD = 4
 
 fn UI() {
     $ui = new()
@@ -27,6 +27,7 @@ fn UI() {
 
     $ui.evt_dispatch = {
         $ui = $1
+        $evt = $2
 
         $elements = $ui.elements
         while $elements.Head > 0 {
@@ -40,9 +41,13 @@ fn UI() {
             && $x0 <= $el.x - $el.parent.x + $el.w / 2
             && $y0 >= $el.y - $el.parent.y - $el.h / 2
             && $y0 <= $el.y - $el.parent.y + $el.h / 2 {
+
                 $dx = -($el.x - $el.parent.x - $el.w / 2 - $x0) / $el.w
                 $dy = -($el.y - $el.parent.y - $el.h / 2 - $y0) / $el.h
-                $el.set($el, $dx, $dy)
+
+                get_prop($el, $evt)($el, $dx, $dy)
+                $el.set($el)
+
             }
         }
     }
@@ -86,6 +91,9 @@ fn UI() {
         $el.color = $color
 
         $el.set = {}
+        $el.evt_click = {}
+        $el.evt_release = {}
+        $el.evt_drag = {}
 
         ret ($el)
     }
@@ -103,11 +111,17 @@ fn UI() {
         $el = $ui._box($2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
-        $el.val = 1
+        $el.val = 0
+
+        $el.evt_click = {
+            $1.val = 1
+        }
+        $el.evt_release = {
+            $1.val = 0
+        }
 
         $el.set = {
             $el = $1
-            $el.val = 1 - $el.val
 
             if $el.val > 0 {
                 op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
@@ -116,7 +130,32 @@ fn UI() {
             }
         }
 
-        $el.set($el, 0, 1)
+        $el.set($el)
+        ret ($el)
+    }
+
+    $ui.Toggle = {
+        $ui = $1
+        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $ui.elements = _($el, $ui.elements)
+
+        $el.val = 0
+
+        $el.evt_click = {
+            $1.val = 1 - $1.val
+        }
+
+        $el.set = {
+            $el = $1
+
+            if $el.val > 0 {
+                op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+            } else {
+                op_cn(OP_COPY, $el, $el.parent.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+            }
+        }
+
+        $el.set($el)
         ret ($el)
     }
 
@@ -127,17 +166,25 @@ fn UI() {
 
         $el.val = 0
 
-        $el.set = {
+        $el.evt_click = {
             $el = $1
             $dx = $2
             $dy = $3
-
             $el.val = 1 - $dy
+        }
+
+        $el.evt_drag = {
+            $1.evt_click($1, $2, $3)
+        }
+
+        $el.set = {
+            $el = $1
+            $dy = 1 - $el.val
             op_cn(OP_COPY, $el, $el.color, BOX_PAD, $dy * $el.h + BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - $dy * $el.h - 2 * BOX_PAD)
             op_cn(OP_COPY, $el, $el.parent.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $dy * $el.h - 2 * BOX_PAD)
         }
 
-        $el.set($el, 0, 1)
+        $el.set($el)
         ret ($el)
     }
 
@@ -148,17 +195,26 @@ fn UI() {
 
         $el.val = 0
 
-        $el.set = {
+        $el.evt_click = {
             $el = $1
             $dx = $2
             $dy = $3
-
             $el.val = $dx
+        }
+
+        $el.evt_drag = {
+            $1.evt_click($1, $2, $3)
+        }
+
+        $el.set = {
+            $el = $1
+
+            $dx = $el.val
             op_cn(OP_COPY, $el, $el.parent.color, $dx * $el.w + BOX_PAD, BOX_PAD, $el.w - $dx * $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
             op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $dx * $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
         }
 
-        $el.set($el, 0, 1)
+        $el.set($el)
         ret ($el)
     }
 
@@ -167,23 +223,35 @@ fn UI() {
         $el = $ui._box($2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
-        $el.val = 0
+        $el.val_x = 0.5
+        $el.val_y = 0.5
 
-        $el.set = {
+        $el.evt_click = {
             $el = $1
             $dx = $2
             $dy = $3
 
             $el.val_x = $dx
             $el.val_y = 1 - $dy
+        }
+
+        $el.evt_drag = {
+            $1.evt_click($1, $2, $3)
+        }
+
+        $el.set = {
+            $el = $1
+
+            $dx = $el.val_x
+            $dy = 1 - $el.val_y
 
             op_cn(OP_COPY, $el, $el.parent.color, BOX_BRD, BOX_BRD, $el.w - 2 * BOX_BRD, $el.h - 2 * BOX_BRD)
-            op_cn(OP_COPY, $el, $el.color, $dx * $el.w - 5 * BOX_BRD, $dy * $el.h - 5 * BOX_BRD, 10 * BOX_BRD, 10 * BOX_BRD)
+            op_cn(OP_COPY, $el, $el.color, $dx * $el.w - 4 * BOX_BRD, $dy * $el.h - 4 * BOX_BRD, 9 * BOX_BRD, 9 * BOX_BRD)
             op_cn(OP_COPY, $el, $el.color, $dx * $el.w, 0, BOX_BRD, $el.h)
             op_cn(OP_COPY, $el, $el.color, 0, $dy * $el.h, $el.w, BOX_BRD)
         }
 
-        $el.set($el, 0.5, 0.5)
+        $el.set($el)
         ret ($el)
     }
 
