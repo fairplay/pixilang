@@ -1,10 +1,11 @@
 include "list.pixi"
 
-BOX_BRD = 1
-BOX_PAD = 4
-
 fn UI() {
     $ui = new()
+
+    $ui.box_brd = $1
+    $ui.box_pad = $2
+    $ui.evt_pad = $3
 
     $ui.elements = -1
 
@@ -37,16 +38,22 @@ fn UI() {
             $x0 = EVT[EVT_X]
             $y0 = EVT[EVT_Y]
 
-            if $x0 >= $el.x - $el.parent.x - $el.w / 2
-            && $x0 <= $el.x - $el.parent.x + $el.w / 2
-            && $y0 >= $el.y - $el.parent.y - $el.h / 2
-            && $y0 <= $el.y - $el.parent.y + $el.h / 2 {
+            if $x0 >= $el.x - $el.parent.x - $el.w / 2 - $ui.evt_pad
+            && $x0 <= $el.x - $el.parent.x + $el.w / 2 + $ui.evt_pad
+            && $y0 >= $el.y - $el.parent.y - $el.h / 2 - $ui.evt_pad
+            && $y0 <= $el.y - $el.parent.y + $el.h / 2 + $ui.evt_pad {
 
                 $dx = -($el.x - $el.parent.x - $el.w / 2 - $x0) / $el.w
                 $dy = -($el.y - $el.parent.y - $el.h / 2 - $y0) / $el.h
+                $dz = EVT[EVT_PRESSURE] / 1024
 
-                get_prop($el, $evt)($el, $dx, $dy)
-                $el.set($el)
+                if $dx < 0 {$dx = 0}
+                if $dx > 1 {$dx = 1}
+                if $dy < 0 {$dy = 0}
+                if $dy > 1 {$dy = 1}
+
+                get_prop($el, $evt)($el, $dx, $dy, $dz)
+                $el.set($el, $ui)
 
             }
         }
@@ -72,16 +79,17 @@ fn UI() {
     }
 
     $ui._box = {
-        $parent = $1
-        $x = $2
-        $y = $3
-        $w = $4
-        $h = $5
-        $color = $6
+        $ui = $1
+        $parent = $2
+        $x = $3
+        $y = $4
+        $w = $5
+        $h = $6
+        $color = $7
 
         $el = new($w, $h)
         clean($el, $color)
-        op_cn(OP_COPY, $el, $el.parent.color, BOX_BRD, BOX_BRD, $w - 2 * BOX_BRD, $h - 2 * BOX_BRD)
+        op_cn(OP_COPY, $el, $el.parent.color, $ui.box_brd, $ui.box_brd, $w - 2 * $ui.box_brd, $h - 2 * $ui.box_brd)
 
         $el.x = $x + ($w - $parent.w) / 2 + $parent.x
         $el.y = $y + ($h - $parent.h) / 2 + $parent.y
@@ -100,7 +108,7 @@ fn UI() {
 
     $ui.Canvas = {
         $ui = $1
-        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
         ret ($el)
@@ -108,7 +116,7 @@ fn UI() {
 
     $ui.Push = {
         $ui = $1
-        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
         $el.val = 0
@@ -122,21 +130,22 @@ fn UI() {
 
         $el.set = {
             $el = $1
+            $ui = $2
 
             if $el.val > 0 {
-                op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+                op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
             } else {
-                op_cn(OP_COPY, $el, $el.parent.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+                op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
             }
         }
 
-        $el.set($el)
+        $el.set($el, $ui)
         ret ($el)
     }
 
     $ui.Toggle = {
         $ui = $1
-        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
         $el.val = 0
@@ -147,21 +156,22 @@ fn UI() {
 
         $el.set = {
             $el = $1
+            $ui = $2
 
             if $el.val > 0 {
-                op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+                op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
             } else {
-                op_cn(OP_COPY, $el, $el.parent.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+                op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
             }
         }
 
-        $el.set($el)
+        $el.set($el, $ui)
         ret ($el)
     }
 
     $ui.VSlider = {
         $ui = $1
-        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
         $el.val = 0
@@ -179,18 +189,20 @@ fn UI() {
 
         $el.set = {
             $el = $1
+            $ui = $2
+
             $dy = 1 - $el.val
-            op_cn(OP_COPY, $el, $el.color, BOX_PAD, $dy * $el.h + BOX_PAD, $el.w - 2 * BOX_PAD, $el.h - $dy * $el.h - 2 * BOX_PAD)
-            op_cn(OP_COPY, $el, $el.parent.color, BOX_PAD, BOX_PAD, $el.w - 2 * BOX_PAD, $dy * $el.h - 2 * BOX_PAD)
+            op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $dy * $el.h + $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - $dy * $el.h - 2 * $ui.box_pad)
+            op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $dy * $el.h - 2 * $ui.box_pad)
         }
 
-        $el.set($el)
+        $el.set($el, $ui)
         ret ($el)
     }
 
     $ui.HSlider = {
         $ui = $1
-        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
         $el.val = 0
@@ -208,31 +220,35 @@ fn UI() {
 
         $el.set = {
             $el = $1
+            $ui = $2
 
             $dx = $el.val
-            op_cn(OP_COPY, $el, $el.parent.color, $dx * $el.w + BOX_PAD, BOX_PAD, $el.w - $dx * $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
-            op_cn(OP_COPY, $el, $el.color, BOX_PAD, BOX_PAD, $dx * $el.w - 2 * BOX_PAD, $el.h - 2 * BOX_PAD)
+            op_cn(OP_COPY, $el, $el.parent.color, $dx * $el.w + $ui.box_pad, $ui.box_pad, $el.w - $dx * $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
+            op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $dx * $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
         }
 
-        $el.set($el)
+        $el.set($el, $ui)
         ret ($el)
     }
 
     $ui.Pad = {
         $ui = $1
-        $el = $ui._box($2, $3, $4, $5, $6, $7)
+        $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
         $el.val_x = 0.5
         $el.val_y = 0.5
+        $el.val_z = 1
 
         $el.evt_click = {
             $el = $1
             $dx = $2
             $dy = $3
+            $dz = $4
 
             $el.val_x = $dx
             $el.val_y = 1 - $dy
+            $el.val_z = $dz
         }
 
         $el.evt_drag = {
@@ -241,20 +257,48 @@ fn UI() {
 
         $el.set = {
             $el = $1
+            $ui = $2
 
             $dx = $el.val_x
             $dy = 1 - $el.val_y
 
-            op_cn(OP_COPY, $el, $el.parent.color, BOX_BRD, BOX_BRD, $el.w - 2 * BOX_BRD, $el.h - 2 * BOX_BRD)
-            op_cn(OP_COPY, $el, $el.color, $dx * $el.w - 4 * BOX_BRD, $dy * $el.h - 4 * BOX_BRD, 9 * BOX_BRD, 9 * BOX_BRD)
-            op_cn(OP_COPY, $el, $el.color, $dx * $el.w, 0, BOX_BRD, $el.h)
-            op_cn(OP_COPY, $el, $el.color, 0, $dy * $el.h, $el.w, BOX_BRD)
+            op_cn(OP_COPY, $el, $el.parent.color, $ui.box_brd, $ui.box_brd, $el.w - 2 * $ui.box_brd, $el.h - 2 * $ui.box_brd)
+            op_cn(OP_COPY, $el, $el.color, $dx * $el.w, 0, $ui.box_brd, $el.h)
+            op_cn(OP_COPY, $el, $el.color, 0, $dy * $el.h, $el.w, $ui.box_brd)
+            op_cn(OP_COPY, $el, $el.color, $dx * $el.w - 4 * $ui.box_brd, $dy * $el.h - 4 * $ui.box_brd, 9 * $ui.box_brd, 9 * $ui.box_brd)
         }
 
-        $el.set($el)
+        $el.set($el, $ui)
         ret ($el)
     }
 
+    $ui.evt_listen = {
+        $ui = $1
+
+        $type = EVT[EVT_TYPE]
+        $key = EVT[EVT_KEY]
+
+        if
+            ($type == EVT_MOUSEMOVE && $key == KEY_MOUSE_LEFT)
+            || $type == EVT_TOUCHMOVE
+        {
+            $ui.evt_dispatch($ui, "evt_drag")
+        }
+
+        if
+            ($type == EVT_MOUSEBUTTONDOWN && $key == KEY_MOUSE_LEFT)
+            || $type == EVT_TOUCHBEGIN
+        {
+            $ui.evt_dispatch($ui, "evt_click")
+        }
+
+        if
+            ($type == EVT_MOUSEBUTTONUP && $key == KEY_MOUSE_LEFT)
+            || $type == EVT_TOUCHEND
+        {
+            $ui.evt_dispatch($ui, "evt_release")
+        }
+    }
 
     ret ($ui)
 }

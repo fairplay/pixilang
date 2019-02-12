@@ -1,21 +1,33 @@
 include "ui.pixi"
 
-//set_pixel_size(WINDOW_XSIZE / 480)
 resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
-PADDING = 32
-
-$ui = UI()
+$ui = UI(1, 8, 8)
 $screen = $ui.Screen($ui)
-$canvas = $ui.Canvas($ui, $screen, PADDING, PADDING, $screen.w - 2 * PADDING, $screen.h - 2 * PADDING, #000000)
 
-$min_size = $canvas.w if $min_size > $canvas.h {$min_size = $canvas.h}
+$canvas_x = ($screen.w / 64) div 1
+$canvas_y = ($screen.h / 64) div 1
+$canvas = $ui.Canvas($ui, $screen, $canvas_x, $canvas_y, $screen.w - 2 * $canvas_x, $screen.h - 2 * $canvas_y, #000000)
 
-$push = $ui.Push($ui, $canvas, $min_size + 32, 0, 32, 32, RED)
-$toggle = $ui.Toggle($ui, $canvas, $min_size + 96, 0, 32, 32, #55aa44)
-$vslider = $ui.VSlider($ui, $canvas, $min_size + 160, 0, 32, 256, #ffffff)
-$hslider = $ui.HSlider($ui, $canvas, $min_size + 32, 320, 256, 32, #99aaff)
-$pad = $ui.Pad($ui, $canvas, 0, 0, $min_size, $min_size, #99aaff)
+$pad_size = $canvas.w
+if $pad_size > $canvas.h {
+    $pad_size = $canvas.h
+}
+
+$ctrl_w = ($pad_size / 9) div 1
+$ctrl_h = $ctrl_w
+$margin = $ctrl_w
+
+$pad_size - 2 * $margin
+
+$pad = $ui.Pad($ui, $canvas, $margin, $margin, $pad_size, $pad_size, #99aaff)
+
+$toggle1 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 1 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$toggle2 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 3 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$toggle3 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 5 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$toggle4 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 7 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+
+$vslider = $ui.VSlider($ui, $canvas, $pad_size + 4 * $margin, $margin, $ctrl_w, $pad_size, #aa4455)
 
 fn gl_cb($ui) {
     set_screen(GL_SCREEN)
@@ -23,39 +35,16 @@ fn gl_cb($ui) {
     set_screen($ui.screen)
 }
 
-set_gl_callback(gl_cb, $ui)
+//set_gl_callback(gl_cb, $ui)
 
 while (1) {
+    $ui.draw($ui)
+
     while get_event() {
-        $evt_type = EVT[EVT_TYPE]
-        $evt_key = EVT[EVT_KEY]
 
-        if
-            $evt_type == EVT_QUIT
-        {
-            breakall
-        }
+        $ui.evt_listen($ui)
 
-        if
-            ($evt_type == EVT_MOUSEMOVE && $evt_key == KEY_MOUSE_LEFT)
-            || $evt_type == EVT_TOUCHMOVE
-        {
-            $ui.evt_dispatch($ui, "evt_drag")
-        }
-
-        if
-            ($evt_type == EVT_MOUSEBUTTONDOWN && $evt_key == KEY_MOUSE_LEFT)
-            || $evt_type == EVT_TOUCHBEGIN
-        {
-            $ui.evt_dispatch($ui, "evt_click")
-        }
-
-        if
-            ($evt_type == EVT_MOUSEBUTTONUP && $evt_key == KEY_MOUSE_LEFT)
-            || $evt_type == EVT_TOUCHEND
-        {
-            $ui.evt_dispatch($ui, "evt_release")
-        }
+        if EVT[EVT_TYPE] == EVT_QUIT { breakall }
     }
     frame()
 }
