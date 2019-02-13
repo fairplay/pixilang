@@ -36,40 +36,35 @@ $toggle2 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 3 * $margin, $ctrl_
 $toggle3 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 5 * $margin, $ctrl_w, $ctrl_h, #55aa44)
 $toggle4 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 7 * $margin, $ctrl_w, $ctrl_h, #55aa44)
 
-$vslider = $ui.VSlider($ui, $canvas, $pad_size + 4 * $margin, $margin, $ctrl_w, $pad_size, #aa4455)
+$slider1 = $ui.HSlider($ui, $canvas, $pad_size + 4 * $margin, $margin, $canvas.w - $pad_size - 5 * $margin, $ctrl_w, #aa4455)
 
 // Sound
 
-$noise = a(osc_noise(0.25))
-$lp = a(lp(4400, 0.95, 0.005))
+$noise = a(osc_noise(0.5))
+$comb = a(comb(440, 0, 0.5))
+$lp = a(lp(440, 0.99, 0))
+$mix = a(mix(0.5))
+
 $out = a(out())
 
-j($out, $lp)
+j($comb, $noise)
+j($lp, $comb)
+j($mix, $comb)
+j($mix, $lp)
 
-$i = 1 while ($i <= 8) {
-    $comb = a(comb($i * 32, 0.999, 0.1))
-    $bp = a(bp($i * 32, 0.9, 0.5))
-    j($comb, $noise)
-    j($bp, $comb)
-    j($lp, $bp)
-    $i + 1
-}
-
-//$v = vis_fft()
-//j($v, $lp)
+j($out, $mix)
 
 run($out)
 
 while (1) {
-    //$v.render($v)
     $ui.draw($ui)
-    ar($noise, "Amp")
 
-    $lp.Freq = $pad.val_x * 500 + 500
+    $comb.Freq = $pad.val_x * 440 + 440
+    $comb.Fbk = $pad.val_y * 0.1 + 0.8
+
+    $lp.Amp = $toggle1.val / 4
+    $lp.Freq = $slider1.val * 220 + 220
     $lp.init($lp)
-    $lp.Amp = $pad.val_y / 200
-
-    //lfo1($lp, "Freq")
 
     while get_event() {
         mutex_lock(AUDIO_MUTEX)
