@@ -5,52 +5,80 @@ include "embe/biquad.pixi"
 include "embe/comb.pixi"
 include "embe/waveshaper.pixi"
 include "embe/vis.pixi"
+include "ui.pixi"
 
-//set_pixel_size(WINDOW_XSIZE / 240)
-//resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
+// UI
 
-$ws = a(waveshaper({
-    $v = $1
-    /*if $v > 0.99 {
-        $v = 0.99
-    }
-    if $v < -0.99 {
-        $v = -0.99
-    }*/
-    ret ($v)
-}))
+resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
+$ui = UI(1, 8, 16)
+$screen = $ui.Screen($ui)
+
+$canvas_x = ($screen.w / 64) div 1
+$canvas_y = ($screen.h / 64) div 1
+$canvas = $ui.Canvas($ui, $screen, $canvas_x, $canvas_y, $screen.w - 2 * $canvas_x, $screen.h - 2 * $canvas_y, #000000)
+
+$pad_size = $canvas.w
+if $pad_size > $canvas.h {
+    $pad_size = $canvas.h
+}
+
+$ctrl_w = ($pad_size / 9) div 1
+$ctrl_h = $ctrl_w
+$margin = $ctrl_w
+
+$pad_size - 2 * $margin
+
+$pad = $ui.Pad($ui, $canvas, $margin, $margin, $pad_size, $pad_size, #99aaff)
+
+$toggle1 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 1 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$toggle2 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 3 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$toggle3 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 5 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$toggle4 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 7 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+
+$vslider = $ui.VSlider($ui, $canvas, $pad_size + 4 * $margin, $margin, $ctrl_w, $pad_size, #aa4455)
+
+// Sound
 
 $noise = a(osc_noise(0.25))
-$lp = a(lp(4400, 0.9, 0.005))
+$lp = a(lp(4400, 0.95, 0.005))
 $out = a(out())
 
 j($out, $lp)
 
-$i = 1 while ($i <= 16) {
+$i = 1 while ($i <= 8) {
     $comb = a(comb($i * 32, 0.999, 0.1))
-    $bp = a(bp($i * 32, 0.8, 0.5))
+    $bp = a(bp($i * 32, 0.9, 0.5))
     j($comb, $noise)
     j($bp, $comb)
     j($lp, $bp)
-    $i + 1.61834
+    $i + 1
 }
 
-$v = vis_fft()
-j($v, $lp)
+//$v = vis_fft()
+//j($v, $lp)
 
 run($out)
 
 while (1) {
-    $v.render($v)
-    lfo1($lp, "Freq")
+    $ui.draw($ui)
     ar($noise, "Amp")
 
-    while(get_event()) {
-        if EVT[ EVT_TYPE ] == EVT_QUIT {
-            break2
-        }
+    mutex_lock(AUDIO_MUTEX)
+    $lp.Freq = $pad.val_x * 500 + 500
+    $lp.init($lp)
+    $lp.Amp = $pad.val_y / 200
+    mutex_unlock(AUDIO_MUTEX)
+
+    //$v.render($v)
+    //lfo1($lp, "Freq")
+
+    while get_event() {
+        $ui.evt_listen($ui)
+        if EVT[EVT_TYPE] == EVT_QUIT { breakall }
     }
+    frame()
 }
+mutex_destroy(AUDIO_MUTEX)
 shut()
-halt    
+halt

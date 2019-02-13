@@ -29,7 +29,7 @@ fn biquad($type, $freq, $r, $amp) {
 
     $this._a = new(3, 1, FLOAT32) //feedforward filter coefficients
     $this._b = new(2, 1, FLOAT32) //feedback filter coefficients
-    $this._f = new_filter() 
+    $this._f = new_filter()
 
     $this.init = {
         $this = $1
@@ -110,7 +110,7 @@ fn biquad($type, $freq, $r, $amp) {
         $sig = new($frames, 1, FLOAT32)
         apply_filter($this._f, $sig, $this.buf, 0, 0, $frames)
         op_cn(OP_MUL, $sig, $this.Amp / $this._alpha)
-        
+
         ret ($sig)
     }
 

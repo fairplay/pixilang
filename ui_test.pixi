@@ -49,4 +49,4 @@ while (1) {
     frame()
 }
 
-set_gl_callback(-1)
+//set_gl_callback(-1)

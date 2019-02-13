@@ -1,6 +1,7 @@
-include "list.pixi"
+//include "list.pixi"
 
 MAX_GENS = 256
+AUDIO_MUTEX = mutex_create()
 
 fn embe() {
     $this = new()
@@ -52,7 +53,7 @@ fn embe() {
         if $node.ready < 0 {
             ret
         }
-    
+
         $sig = $node.gen($node, $frames)
 
         if $sig == 0 {
@@ -131,7 +132,9 @@ fn run($node) {
         $in_channels,
         $latency_in_frames
     ) {
+        mutex_lock(AUDIO_MUTEX)
         Embe.process(Embe, $frames, $in_channels)
+        mutex_unlock(AUDIO_MUTEX)
         copy($channels[0], $node.buf)
         ret (1)
     }
