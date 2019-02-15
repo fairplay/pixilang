@@ -264,16 +264,16 @@ fn UI() {
             $dz = $el.val_z
 
             op_cn(OP_COPY, $el, $el.parent.color, $ui.box_brd, $ui.box_brd, $el.w - 2 * $ui.box_brd, $el.h - 2 * $ui.box_brd)
-            op_cn(OP_COPY, $el, $el.color, $dx * $el.w, 0, $ui.box_brd, $el.h)
-            op_cn(OP_COPY, $el, $el.color, 0, $dy * $el.h, $el.w, $ui.box_brd)
+            //op_cn(OP_COPY, $el, $el.color, $dx * $el.w, 0, $ui.box_brd, $el.h)
+            //op_cn(OP_COPY, $el, $el.color, 0, $dy * $el.h, $el.w, $ui.box_brd)
 
             op_cn(OP_COPY,
                 $el,
                 $el.color,
-                $dx * $el.w - $dz * 16 * $ui.box_brd,
-                $dy * $el.h - $dz * 16 * $ui.box_brd,
-                33 * $dz * $ui.box_brd,
-                33 * $dz * $ui.box_brd
+                $dx * $el.w - 8 * $dz * $ui.box_brd,
+                $dy * $el.h - 8 * $dz * $ui.box_brd,
+                17 * $dz * $ui.box_brd,
+                17 * $dz * $ui.box_brd
             )
         }
 

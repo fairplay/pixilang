@@ -40,9 +40,12 @@ $slider1 = $ui.HSlider($ui, $canvas, $pad_size + 4 * $margin, $margin, $canvas.w
 
 // Sound
 
-$noise = a(osc_noise(0.5))
+$noise = a(osc_noise(0.05))
+
+
+$lp = a(lp(440, 0, 0.5))
 $comb = a(comb(440, 0, 0.5))
-$lp = a(lp(440, 0.99, 0))
+
 $mix = a(mix(0.5))
 
 $out = a(out())
@@ -57,10 +60,9 @@ j($out, $mix)
 run($out)
 
 while (1) {
-    $ui.draw($ui)
 
     $comb.Freq = $pad.val_x * 440 + 440
-    $comb.Fbk = $pad.val_y * 0.1 + 0.8
+    $comb.Fbk = $pad.val_y * 0.1 + 0.9
 
     $lp.Amp = $toggle1.val / 4
     $lp.Freq = $slider1.val * 220 + 220
@@ -73,6 +75,8 @@ while (1) {
 
         if EVT[EVT_TYPE] == EVT_QUIT { breakall }
     }
+
+    $ui.draw($ui)
     frame()
 }
 mutex_destroy(AUDIO_MUTEX)
