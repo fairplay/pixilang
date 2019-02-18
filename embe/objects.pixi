@@ -1,0 +1,19 @@
+fn mix($amp) {
+    $this = new()
+
+    $this.Amp = $amp
+    $this.NewAmp = $amp
+
+    $this.gen = {
+        $this = $1
+        $frames = $2
+
+        $sig = new($frames, 1, FLOAT32)
+        copy($sig, $this.buf)
+        envelope2p($sig, $this.Amp * 32768, $this.NewAmp * 32768)
+        $this.Amp = $this.NewAmp
+        ret ($sig)
+    }
+
+    ret ($this)
+}

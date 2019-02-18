@@ -1,84 +1,122 @@
+include "list.pixi"
 include "embe.pixi"
 include "embe/osc.pixi"
 include "embe/mod.pixi"
 include "embe/biquad.pixi"
-include "embe/comb.pixi"
-include "embe/waveshaper.pixi"
+include "embe/delay.pixi"
+include "embe/objects.pixi"
 include "embe/vis.pixi"
 include "ui.pixi"
+
+$PAUSE = 20
 
 // UI
 
 resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
-$ui = UI(1, 8, 16)
+$ui = UI(2, 8, 8)
 $screen = $ui.Screen($ui)
 
-$canvas_x = ($screen.w / 64) div 1
-$canvas_y = ($screen.h / 64) div 1
+$canvas_x = ($screen.w / 16) div 1
+$canvas_y = ($screen.h / 16) div 1
 $canvas = $ui.Canvas($ui, $screen, $canvas_x, $canvas_y, $screen.w - 2 * $canvas_x, $screen.h - 2 * $canvas_y, #000000)
 
-$pad_size = $canvas.w
-if $pad_size > $canvas.h {
-    $pad_size = $canvas.h
+$pad_size = $canvas.h
+if $pad_size > $canvas.w {
+    $pad_size = $canvas.w
 }
 
-$ctrl_w = ($pad_size / 9) div 1
-$ctrl_h = $ctrl_w
-$margin = $ctrl_w
+$btn_size = ($pad_size / 8) div 1
 
-$pad_size - 2 * $margin
+$pad = $ui.Pad($ui, $canvas, 0, 0, $pad_size, $pad_size, #99aaff)
+$pad.set($pad, 0, 0, 0)
 
-$pad = $ui.Pad($ui, $canvas, $margin, $margin, $pad_size, $pad_size, #99aaff)
+$radio = $ui.Radio($ui)
 
-$toggle1 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 1 * $margin, $ctrl_w, $ctrl_h, #55aa44)
-$toggle2 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 3 * $margin, $ctrl_w, $ctrl_h, #55aa44)
-$toggle3 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 5 * $margin, $ctrl_w, $ctrl_h, #55aa44)
-$toggle4 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 7 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$btn_osc = $ui.Toggle($ui, $canvas, $pad_size + $btn_size, 0 * $btn_size, $btn_size, $btn_size, #99aaff)
+$btn_dly = $ui.Toggle($ui, $canvas, $pad_size + $btn_size, 2 * $btn_size, $btn_size, $btn_size, #aa5599)
+$btn_flt = $ui.Toggle($ui, $canvas, $pad_size + $btn_size, 4 * $btn_size, $btn_size, $btn_size, #227823)
 
-$slider1 = $ui.HSlider($ui, $canvas, $pad_size + 4 * $margin, $margin, $canvas.w - $pad_size - 5 * $margin, $ctrl_w, #aa4455)
+$btn_osc.set($btn_osc, 1)
+
+$radio.add($radio, $btn_osc)
+$radio.add($radio, $btn_dly)
+$radio.add($radio, $btn_flt)
 
 // Sound
 
-$noise = a(osc_noise(0.05))
+$noise = a(osc_noise(0))
+$comb = a(comb(220, 0.99, 0.5))
+$osc = j($comb, $noise)
 
-
-$lp = a(lp(440, 0, 0.5))
-$comb = a(comb(440, 0, 0.5))
+$dly = a(delay(0, 0, 0))
+$flt = a(lp(220, 0.5, 0))
 
 $mix = a(mix(0.5))
 
-$out = a(out())
+j($dly, $osc)
+j($flt, $osc)
 
-j($comb, $noise)
-j($lp, $comb)
-j($mix, $comb)
-j($mix, $lp)
+j($mix, $osc)
+j($mix, $dly)
+j($mix, $flt)
 
-j($out, $mix)
+out($mix)
 
-run($out)
+$redraw = 1
+$shut = 0
+
+fn gl_cb($ui) {
+    set_screen(GL_SCREEN)
+    $ui.draw($ui)
+    set_screen($ui.screen)
+}
+
+set_gl_callback(gl_cb, $ui)
 
 while (1) {
+    if $redraw {
+        $redraw = 0
+        frame($PAUSE)
+    } else {
+        sleep($PAUSE)
+    }
 
-    $comb.Freq = $pad.val_x * 440 + 440
-    $comb.Fbk = $pad.val_y * 0.1 + 0.9
+    if $btn_osc.val == 1 {
+        $ui.set_element_color($ui, $pad, $btn_osc.color)
+        $dly.Amp = 0
+        $flt.Amp = 0
+    }
+    $noise.Amp = $pad.val_x * 0.25 * $pad.val_z
+    $osc.Freq = $pad.val_y * 220 + 220
 
-    $lp.Amp = $toggle1.val / 4
-    $lp.Freq = $slider1.val * 220 + 220
-    $lp.init($lp)
+    if $btn_dly.val == 1 {
+        $ui.set_element_color($ui, $pad, $btn_dly.color)
+        $dly.Amp = 0.25
+        $dly.NewDly = $pad.val_x * 0.125 + 0.125
+        $dly.Fbk = $pad.val_y * 0.5 + 0.25
+    }
+
+    if $btn_flt.val == 1 {
+        $ui.set_element_color($ui, $pad, $btn_flt.color)
+        $flt.Amp = 0.25
+        $flt.Freq = $pad.val_y * 110 + 110
+    }
 
     while get_event() {
         mutex_lock(AUDIO_MUTEX)
-        $ui.evt_listen($ui)
+        $redraw = $ui.evt_listen($ui)
         mutex_unlock(AUDIO_MUTEX)
 
-        if EVT[EVT_TYPE] == EVT_QUIT { breakall }
+        if EVT[EVT_TYPE] == EVT_QUIT {
+            $shut = 1
+        }
     }
 
-    $ui.draw($ui)
-    frame()
+    if $shut > 0 {
+        shut()
+        mutex_destroy(AUDIO_MUTEX)
+        sleep(100)
+        halt
+    }
 }
-mutex_destroy(AUDIO_MUTEX)
-shut()
-halt

@@ -1,6 +1,6 @@
 fn osc_imp($amp) {
-
     $this = new()
+
     $this.Amp = $amp
     $this.is_gen = 1
 
@@ -20,8 +20,8 @@ fn osc_imp($amp) {
 }
 
 fn osc_noise($amp) {
-
     $this = new()
+
     $this.Amp = $amp
     $this.is_gen = 1
 
@@ -39,12 +39,12 @@ fn osc_noise($amp) {
 }
 
 fn osc_sin($freq, $amp) {
-
     $this = new()
 
     $this.Phase = 0
     $this.Freq = $freq
     $this.Amp = $amp
+    $this.NewAmp = $amp
     $this.is_gen = 1
 
     $this.gen = { // $this, $frames
@@ -57,7 +57,9 @@ fn osc_sin($freq, $amp) {
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
-        generator(OP_SIN, $sig, $p, $this.Amp, $d, 0)
+        generator(OP_SIN8, $sig, $p, 1, $d, 0)
+        envelope2p($sig, $this.Amp * 32768, $this.NewAmp * 32768)
+        $this.Amp = $this.NewAmp
 
         $this.Phase + $this.Freq * $frames
 
@@ -72,12 +74,12 @@ fn osc_sin($freq, $amp) {
 }
 
 fn osc_sqr($freq, $amp) {
-
     $this = new()
 
     $this.Phase = 0
     $this.Freq = $freq
     $this.Amp = $amp
+    $this.NewAmp = $amp
     $this.is_gen = 1
 
     $this.gen = { // $this, $frames
@@ -90,10 +92,13 @@ fn osc_sqr($freq, $amp) {
         $p = 2 * M_PI * $this.Phase / $srate
         $d = 2 * M_PI * $this.Freq / $srate
 
-        generator(OP_SIN, $sig, $p, 1, $d, 0)
+        generator(OP_SIN8, $sig, $p, 1, $d, 0)
         op_cn(OP_GREATER, $sig, 0)
-        op_cn(OP_MUL, $sig, 2 * $this.Amp)
-        op_cn(OP_ADD, $sig, -$this.Amp)
+        op_cn(OP_MUL, $sig, 2)
+        op_cn(OP_ADD, $sig, -1)
+
+        envelope2p($sig, $this.Amp * 32768, $this.NewAmp * 32768)
+        $this.Amp = $this.NewAmp
 
         $this.Phase + $this.Freq * $frames
 

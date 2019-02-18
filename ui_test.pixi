@@ -1,3 +1,4 @@
+include "list.pixi"
 include "ui.pixi"
 
 resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
@@ -24,8 +25,8 @@ $pad = $ui.Pad($ui, $canvas, $margin, $margin, $pad_size, $pad_size, #99aaff)
 
 $toggle1 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 1 * $margin, $ctrl_w, $ctrl_h, #55aa44)
 $toggle2 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 3 * $margin, $ctrl_w, $ctrl_h, #55aa44)
-$toggle3 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 5 * $margin, $ctrl_w, $ctrl_h, #55aa44)
-$toggle4 = $ui.Toggle($ui, $canvas, $pad_size + 2 * $margin, 7 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$push1 = $ui.Push($ui, $canvas, $pad_size + 2 * $margin, 5 * $margin, $ctrl_w, $ctrl_h, #55aa44)
+$push2 = $ui.Push($ui, $canvas, $pad_size + 2 * $margin, 7 * $margin, $ctrl_w, $ctrl_h, #55aa44)
 
 $vslider = $ui.VSlider($ui, $canvas, $pad_size + 4 * $margin, $margin, $ctrl_w, $pad_size, #aa4455)
 

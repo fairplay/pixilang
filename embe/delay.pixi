@@ -1,0 +1,56 @@
+fn delay($dly, $fbk, $amp) {
+    $this = new()
+
+    $this.Dly = $dly
+    $this.NewDly = $dly
+    $this.Fbk = $fbk
+    $this.Amp = $amp
+
+    $this._srate = get_audio_sample_rate(1)
+    $this._dly_line = new($this._srate, 1, FLOAT32)
+    clean($this._dly_line)
+
+    $this.gen = { // $this, $frames, $in_channels
+        $this = $1
+        $frames = $2
+        $in_channels = $3
+
+        copy($this._dly_line, $this._dly_line, $frames, 0)
+        $i = 0 while ($i < $frames) {
+            $this._dly_line[$frames - 1 - $i] = $this.buf[$i]
+
+            $r = $i / ($frames - 1)
+            $dly = $this._srate * ($this.Dly * (1 - $r) + $this.NewDly * $r)
+            $dly0 = floor($dly)
+
+            $dly_val1 = $this._dly_line[$frames - $i + $dly0]
+            $dly_val0 = $this._dly_line[$frames - $i - 1 + $dly0]
+            $dly_val = $dly_val0 + ($dly_val1 - $dly_val0) * ($dly - $dly0)
+
+            $this._dly_line[$frames - 1 - $i] + $dly_val * $this.Fbk
+            $this.buf[$i] + $dly_val
+
+            $i + 1
+        }
+
+        $this.Dly = $this.NewDly
+
+        $sig = clone($this.buf)
+        op_cn(OP_MUL, $sig, $this.Amp)
+
+        ret ($sig)
+    }
+
+    ret ($this)
+}
+
+fn comb($freq, $fbk, $amp) {
+
+    $this = delay(1 / $freq, $fbk, $amp)
+
+    $this.setFreq = {
+        $1.NewDly = 1 / $2
+    }
+
+    ret ($this)
+}

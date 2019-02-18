@@ -1,4 +1,4 @@
-include "list.pixi"
+UI_MAX_RADIO_SIZE = 16
 
 fn UI() {
     $ui = new()
@@ -11,7 +11,18 @@ fn UI() {
 
     // methods
 
+    $ui.set_element_color = {
+        $ui = $1
+        $el = $2
+        $color = $3
+
+        clean($el, $color)
+        op_cn(OP_COPY, $el, $el.parent.color, $ui.box_brd, $ui.box_brd, $el.w - 2 * $ui.box_brd, $el.h - 2 * $ui.box_brd)
+        $el.color = $color
+    }
     $ui.draw = {
+        $ui = $1
+
         fn draw_list($elements) {
             $el = $elements.Head
             if $elements.Tail > -1 {
@@ -22,14 +33,45 @@ fn UI() {
             remove($gfx)
         }
 
-        $ui = $1
         draw_list($ui.elements)
+    }
+
+    $ui.evt_listen = {
+        $ui = $1
+
+        $type = EVT[EVT_TYPE]
+        $key = EVT[EVT_KEY]
+
+        $redraw = 0
+        if
+            ($type == EVT_MOUSEMOVE && $key == KEY_MOUSE_LEFT)
+            || $type == EVT_TOUCHMOVE
+        {
+            $redraw = $ui.evt_dispatch($ui, "evt_drag")
+        }
+
+        if
+            ($type == EVT_MOUSEBUTTONDOWN && $key == KEY_MOUSE_LEFT)
+            || $type == EVT_TOUCHBEGIN
+        {
+            $redraw = $ui.evt_dispatch($ui, "evt_click")
+        }
+
+        if
+            ($type == EVT_MOUSEBUTTONUP && $key == KEY_MOUSE_LEFT)
+            || $type == EVT_TOUCHEND
+        {
+            $redraw = $ui.evt_dispatch($ui, "evt_release")
+        }
+
+        ret ($redraw)
     }
 
     $ui.evt_dispatch = {
         $ui = $1
         $evt = $2
 
+        $redraw = 0
         $elements = $ui.elements
         while $elements.Head > 0 {
             $el = $elements.Head
@@ -44,7 +86,7 @@ fn UI() {
             && $y0 <= $el.y - $el.parent.y + $el.h / 2 + $ui.evt_pad {
 
                 $dx = -($el.x - $el.parent.x - $el.w / 2 - $x0) / $el.w
-                $dy = -($el.y - $el.parent.y - $el.h / 2 - $y0) / $el.h
+                $dy = 1 + ($el.y - $el.parent.y - $el.h / 2 - $y0) / $el.h
                 $dz = EVT[EVT_PRESSURE] / 1024
 
                 if $dx < 0 {$dx = 0}
@@ -53,10 +95,11 @@ fn UI() {
                 if $dy > 1 {$dy = 1}
 
                 get_prop($el, $evt)($el, $dx, $dy, $dz)
-                $el.set($el, $ui)
-
+                $redraw = 1
             }
         }
+
+        ret ($redraw)
     }
 
     // elements
@@ -88,15 +131,15 @@ fn UI() {
         $color = $7
 
         $el = new($w, $h)
-        clean($el, $color)
-        op_cn(OP_COPY, $el, $el.parent.color, $ui.box_brd, $ui.box_brd, $w - 2 * $ui.box_brd, $h - 2 * $ui.box_brd)
 
         $el.x = $x + ($w - $parent.w) / 2 + $parent.x
         $el.y = $y + ($h - $parent.h) / 2 + $parent.y
         $el.w = $w
         $el.h = $h
         $el.parent = $parent
-        $el.color = $color
+        $el.ui = $ui
+
+        $ui.set_element_color($ui, $el, $color)
 
         $el.set = {}
         $el.evt_click = {}
@@ -104,6 +147,24 @@ fn UI() {
         $el.evt_drag = {}
 
         ret ($el)
+    }
+
+    $ui.Radio = {
+        $ui = $1
+
+        $radio = new(UI_MAX_RADIO_SIZE, INT16)
+        clean($radio, -1)
+
+        $radio.add = {
+            $radio = $1
+            $el = $2
+
+            copy($radio, $radio, 1, 0)
+            $radio[0] = $el
+            $el.radio = $radio
+        }
+
+        ret ($radio)
     }
 
     $ui.Canvas = {
@@ -122,24 +183,29 @@ fn UI() {
         $el.val = 0
 
         $el.evt_click = {
-            $1.val = 1
+            $el = $1
+            $el.set($el, 1)
         }
+
         $el.evt_release = {
-            $1.val = 0
+            $el = $1
+            $el.set($el, 0)
         }
 
         $el.set = {
             $el = $1
-            $ui = $2
+            $val = $2
 
-            if $el.val > 0 {
+            $ui = $el.ui
+            $el.val = $val
+
+            if $val > 0 {
                 op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
             } else {
                 op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
             }
         }
 
-        $el.set($el, $ui)
         ret ($el)
     }
 
@@ -148,15 +214,34 @@ fn UI() {
         $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
-        $el.val = 0
-
         $el.evt_click = {
-            $1.val = 1 - $1.val
+            $el = $1
+            $el.val = 1 - $el.val
+            $ui = $el.ui
+
+            if $el.radio > 0 {
+                $i = 0 while $i < UI_MAX_RADIO_SIZE {
+                    if $el.radio[$i] == -1 {
+                        break
+                    }
+                    if $el == $el.radio[$i] {
+                        $el.set($el, 1)
+                    } else {
+                        $el0 = $el.radio[$i]
+                        $el0.set($el0, 0)
+                    }
+
+                    $i + 1
+                }
+            } else {
+                $el.set($el, $el.val)
+            }
         }
 
         $el.set = {
             $el = $1
-            $ui = $2
+            $el.val = $2
+            $ui = $el.ui
 
             if $el.val > 0 {
                 op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
@@ -165,7 +250,7 @@ fn UI() {
             }
         }
 
-        $el.set($el, $ui)
+        $el.set($el, 0)
         ret ($el)
     }
 
@@ -174,13 +259,11 @@ fn UI() {
         $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
-        $el.val = 0
-
         $el.evt_click = {
             $el = $1
             $dx = $2
             $dy = $3
-            $el.val = 1 - $dy
+            $el.set($el, $dy)
         }
 
         $el.evt_drag = {
@@ -189,14 +272,16 @@ fn UI() {
 
         $el.set = {
             $el = $1
-            $ui = $2
+            $el.val = $2
+            $ui = $el.ui
 
             $dy = 1 - $el.val
+
             op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $dy * $el.h + $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - $dy * $el.h - 2 * $ui.box_pad)
             op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $dy * $el.h - 2 * $ui.box_pad)
         }
 
-        $el.set($el, $ui)
+        $el.set($el, 0)
         ret ($el)
     }
 
@@ -211,7 +296,7 @@ fn UI() {
             $el = $1
             $dx = $2
             $dy = $3
-            $el.val = $dx
+            $el.set($el, $dx)
         }
 
         $el.evt_drag = {
@@ -220,14 +305,16 @@ fn UI() {
 
         $el.set = {
             $el = $1
-            $ui = $2
+            $dx = $2
+            $ui = $el.ui
 
-            $dx = $el.val
+            $el.val = $dx
+
             op_cn(OP_COPY, $el, $el.parent.color, $dx * $el.w + $ui.box_pad, $ui.box_pad, $el.w - $dx * $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
             op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $dx * $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
         }
 
-        $el.set($el, $ui)
+        $el.set($el)
         ret ($el)
     }
 
@@ -236,9 +323,9 @@ fn UI() {
         $el = $ui._box($ui, $2, $3, $4, $5, $6, $7)
         $ui.elements = _($el, $ui.elements)
 
-        $el.val_x = 0.5
-        $el.val_y = 0.5
-        $el.val_z = 1
+        $el.val_x = 0
+        $el.val_y = 0
+        $el.val_z = 0
 
         $el.evt_click = {
             $el = $1
@@ -246,10 +333,18 @@ fn UI() {
             $dy = $3
             $dz = $4
 
-            $el.val_x = $dx
-            $el.val_y = 1 - $dy
-            $el.val_z = $dz
+            $el.set($el, $dx, $dy, $dz)
         }
+
+        $el.evt_release = {
+            $el = $1
+            $dx = $2
+            $dy = $3
+            $dz = $4
+
+            $el.set($el, $dx, $dy, 0)
+        }
+
 
         $el.evt_drag = {
             $1.evt_click($1, $2, $3, $4)
@@ -257,56 +352,31 @@ fn UI() {
 
         $el.set = {
             $el = $1
-            $ui = $2
+            $el.val_x = $2
+            $el.val_y = $3
+            $el.val_z = $4
+
+            $ui = $el.ui
 
             $dx = $el.val_x
             $dy = 1 - $el.val_y
             $dz = $el.val_z
 
-            op_cn(OP_COPY, $el, $el.parent.color, $ui.box_brd, $ui.box_brd, $el.w - 2 * $ui.box_brd, $el.h - 2 * $ui.box_brd)
-            //op_cn(OP_COPY, $el, $el.color, $dx * $el.w, 0, $ui.box_brd, $el.h)
-            //op_cn(OP_COPY, $el, $el.color, 0, $dy * $el.h, $el.w, $ui.box_brd)
-
             op_cn(OP_COPY,
                 $el,
-                $el.color,
-                $dx * $el.w - 8 * $dz * $ui.box_brd,
-                $dy * $el.h - 8 * $dz * $ui.box_brd,
-                17 * $dz * $ui.box_brd,
-                17 * $dz * $ui.box_brd
+                $el.parent.color,
+                $ui.box_brd,
+                $ui.box_brd,
+                $el.w - 2 * $ui.box_brd,
+                $el.h - 2 * $ui.box_brd
             )
+
+            op_cn(OP_COPY, $el, $el.color, $dx * $el.w, $ui.box_brd, $ui.box_brd, $el.h - 2 * $ui.box_brd)
+            op_cn(OP_COPY, $el, $el.color, $ui.box_brd, $dy * $el.h, $el.w - 2 * $ui.box_brd, $ui.box_brd)
         }
 
-        $el.set($el, $ui)
+        $el.set($el)
         ret ($el)
-    }
-
-    $ui.evt_listen = {
-        $ui = $1
-
-        $type = EVT[EVT_TYPE]
-        $key = EVT[EVT_KEY]
-
-        if
-            ($type == EVT_MOUSEMOVE && $key == KEY_MOUSE_LEFT)
-            || $type == EVT_TOUCHMOVE
-        {
-            $ui.evt_dispatch($ui, "evt_drag")
-        }
-
-        if
-            ($type == EVT_MOUSEBUTTONDOWN && $key == KEY_MOUSE_LEFT)
-            || $type == EVT_TOUCHBEGIN
-        {
-            $ui.evt_dispatch($ui, "evt_click")
-        }
-
-        if
-            ($type == EVT_MOUSEBUTTONUP && $key == KEY_MOUSE_LEFT)
-            || $type == EVT_TOUCHEND
-        {
-            $ui.evt_dispatch($ui, "evt_release")
-        }
     }
 
     ret ($ui)
