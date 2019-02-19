@@ -80,10 +80,11 @@ fn UI() {
             $x0 = EVT[EVT_X]
             $y0 = EVT[EVT_Y]
 
-            if $x0 >= $el.x - $el.parent.x - $el.w / 2 - $ui.evt_pad
-            && $x0 <= $el.x - $el.parent.x + $el.w / 2 + $ui.evt_pad
-            && $y0 >= $el.y - $el.parent.y - $el.h / 2 - $ui.evt_pad
-            && $y0 <= $el.y - $el.parent.y + $el.h / 2 + $ui.evt_pad {
+            if $el.val == 1 
+                || ($x0 >= $el.x - $el.parent.x - $el.w / 2 - $ui.evt_pad
+                && $x0 <= $el.x - $el.parent.x + $el.w / 2 + $ui.evt_pad
+                && $y0 >= $el.y - $el.parent.y - $el.h / 2 - $ui.evt_pad
+                && $y0 <= $el.y - $el.parent.y + $el.h / 2 + $ui.evt_pad) {
 
                 $dx = -($el.x - $el.parent.x - $el.w / 2 - $x0) / $el.w
                 $dy = 1 + ($el.y - $el.parent.y - $el.h / 2 - $y0) / $el.h
@@ -139,6 +140,8 @@ fn UI() {
         $el.parent = $parent
         $el.ui = $ui
 
+        $el.box_pad = floor(0.5 + $ui.box_pad * min($el.w, $el.h))
+
         $ui.set_element_color($ui, $el, $color)
 
         $el.set = {}
@@ -192,6 +195,18 @@ fn UI() {
             $el.set($el, 0)
         }
 
+        $el.evt_drag = {
+            $el = $1
+            $dx = $2
+            $dy = $3
+
+            if ($dx == 1 || $dx == 0 || $dy == 1 || $dy == 0) {
+                $el.set($el, 0)
+            } else {
+                $el.set($el, 1)            
+            }
+        }
+        
         $el.set = {
             $el = $1
             $val = $2
@@ -200,9 +215,9 @@ fn UI() {
             $el.val = $val
 
             if $val > 0 {
-                op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
+                op_cn(OP_COPY, $el, $el.color, $el.box_pad, $el.box_pad, $el.w - 2 * $el.box_pad, $el.h - 2 * $el.box_pad)
             } else {
-                op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
+                op_cn(OP_COPY, $el, $el.parent.color, $el.box_pad, $el.box_pad, $el.w - 2 * $el.box_pad, $el.h - 2 * $el.box_pad)
             }
         }
 
@@ -244,9 +259,9 @@ fn UI() {
             $ui = $el.ui
 
             if $el.val > 0 {
-                op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
+                op_cn(OP_COPY, $el, $el.color, $el.box_pad, $el.box_pad, $el.w - 2 * $el.box_pad, $el.h - 2 * $el.box_pad)
             } else {
-                op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
+                op_cn(OP_COPY, $el, $el.parent.color, $el.box_pad, $el.box_pad, $el.w - 2 * $el.box_pad, $el.h - 2 * $el.box_pad)
             }
         }
 
@@ -277,8 +292,8 @@ fn UI() {
 
             $dy = 1 - $el.val
 
-            op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $dy * $el.h + $ui.box_pad, $el.w - 2 * $ui.box_pad, $el.h - $dy * $el.h - 2 * $ui.box_pad)
-            op_cn(OP_COPY, $el, $el.parent.color, $ui.box_pad, $ui.box_pad, $el.w - 2 * $ui.box_pad, $dy * $el.h - 2 * $ui.box_pad)
+            op_cn(OP_COPY, $el, $el.color, $el.box_pad, $dy * $el.h + $el.box_pad, $el.w - 2 * $el.box_pad, $el.h - $dy * $el.h - 2 * $el.box_pad)
+            op_cn(OP_COPY, $el, $el.parent.color, $el.box_pad, $el.box_pad, $el.w - 2 * $el.box_pad, $dy * $el.h - 2 * $el.box_pad)
         }
 
         $el.set($el, 0)
@@ -310,8 +325,8 @@ fn UI() {
 
             $el.val = $dx
 
-            op_cn(OP_COPY, $el, $el.parent.color, $dx * $el.w + $ui.box_pad, $ui.box_pad, $el.w - $dx * $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
-            op_cn(OP_COPY, $el, $el.color, $ui.box_pad, $ui.box_pad, $dx * $el.w - 2 * $ui.box_pad, $el.h - 2 * $ui.box_pad)
+            op_cn(OP_COPY, $el, $el.parent.color, $dx * $el.w + $el.box_pad, $el.box_pad, $el.w - $dx * $el.w - 2 * $el.box_pad, $el.h - 2 * $el.box_pad)
+            op_cn(OP_COPY, $el, $el.color, $el.box_pad, $el.box_pad, $dx * $el.w - 2 * $el.box_pad, $el.h - 2 * $el.box_pad)
         }
 
         $el.set($el)
@@ -382,4 +397,9 @@ fn UI() {
     ret ($ui)
 }
 
-
+fn min($x, $y) {
+    if $x > $y {
+        ret ($y)
+    }
+    ret ($x)
+}

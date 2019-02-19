@@ -14,7 +14,7 @@ $PAUSE = 20
 
 resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
-$ui = UI(2, 8, 8)
+$ui = UI(2, 0.25, 8)
 $screen = $ui.Screen($ui)
 
 $canvas_x = ($screen.w / 16) div 1
@@ -88,7 +88,7 @@ while (1) {
         $flt.Amp = 0
     }
     $noise.Amp = $pad.val_x * 0.25 * $pad.val_z
-    $osc.Freq = $pad.val_y * 220 + 220
+    $osc.setFreq($osc, $pad.val_y * 220 + 220)
 
     if $btn_dly.val == 1 {
         $ui.set_element_color($ui, $pad, $btn_dly.color)

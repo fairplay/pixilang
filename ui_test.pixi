@@ -3,7 +3,7 @@ include "ui.pixi"
 
 resize(get_screen(), WINDOW_XSIZE, WINDOW_YSIZE)
 
-$ui = UI(1, 8, 8)
+$ui = UI(1, 0.125, 8)
 $screen = $ui.Screen($ui)
 
 $canvas_x = ($screen.w / 64) div 1
